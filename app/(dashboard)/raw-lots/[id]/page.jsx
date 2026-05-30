@@ -22,11 +22,11 @@ export default function RawLotDetailPage() {
 
   async function handleStatusUpdate(newStatus) {
     try {
-      await api.patch(`/raw-lots/${id}/status`, { status: newStatus, notes: `Status diubah ke ${newStatus}` });
-      toast.success(`Status diubah ke ${newStatus}`);
+      await api.patch(`/raw-lots/${id}/status`, { status: newStatus, notes: `Status updated to ${newStatus}` });
+      toast.success(`Status updated to ${newStatus}`);
       queryClient.invalidateQueries(['raw-lot', id]);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal update status');
+      toast.error(err.response?.data?.message || 'Failed to update status');
     }
   }
 
@@ -34,7 +34,7 @@ export default function RawLotDetailPage() {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div></div>;
   }
 
-  if (!lot) return <p className="text-slate-500">Lot tidak ditemukan</p>;
+  if (!lot) return <p className="text-slate-500">Lot not found</p>;
 
   return (
     <div className="space-y-6">
@@ -49,16 +49,16 @@ export default function RawLotDetailPage() {
       {/* Status Action Buttons */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3 flex-wrap">
         {lot.current_status === 'INCOMING' && ['OPERATOR', 'MANAGER'].includes(user?.role) && (
-          <button onClick={() => handleStatusUpdate('QC_PENDING')} className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm rounded-lg">→ Kirim ke QC</button>
+          <button onClick={() => handleStatusUpdate('QC_PENDING')} className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm rounded-lg">→ Send to QC</button>
         )}
         {lot.current_status === 'QC_APPROVED' && ['PPIC', 'MANAGER'].includes(user?.role) && (
-          <button onClick={() => handleStatusUpdate('IN_QUEUE')} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg">→ Masuk Antrian</button>
+          <button onClick={() => handleStatusUpdate('IN_QUEUE')} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg">→ Queue for Production</button>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <p className="text-sm text-slate-500">Qty Awal</p>
+          <p className="text-sm text-slate-500">Initial Qty</p>
           <p className="text-xl font-bold text-slate-800">{formatNumber(lot.initial_qty)} {lot.material?.unit}</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-slate-200">
@@ -73,7 +73,7 @@ export default function RawLotDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200">
-          <h3 className="font-semibold text-slate-700 mb-4">Riwayat Status</h3>
+          <h3 className="font-semibold text-slate-700 mb-4">Status History</h3>
           <LotTimeline stages={lot.stages} />
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col items-center">

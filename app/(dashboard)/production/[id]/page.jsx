@@ -28,7 +28,7 @@ export default function ProductionDetailPage() {
 
   async function handleAddInput(e) {
     e.preventDefault();
-    if (!inputForm.rawLotId || !inputForm.qtyUsed) { toast.error('Lot dan Qty wajib diisi'); return; }
+    if (!inputForm.rawLotId || !inputForm.qtyUsed) { toast.error('Lot and Qty are required'); return; }
     try {
       const lot = availableLots?.find((l) => l.id === inputForm.rawLotId);
       await api.post(`/production-orders/${id}/inputs`, {
@@ -36,12 +36,12 @@ export default function ProductionDetailPage() {
         materialId: lot?.material_id,
         qtyUsed: Number(inputForm.qtyUsed),
       });
-      toast.success('Bahan baku ditambahkan');
+      toast.success('Raw material added');
       setAddingInput(false);
       setInputForm({ rawLotId: '', qtyUsed: '' });
       queryClient.invalidateQueries(['production-order', id]);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal menambah input');
+      toast.error(err.response?.data?.message || 'Failed to add input');
     }
   }
 
@@ -49,19 +49,19 @@ export default function ProductionDetailPage() {
     try {
       const body = { status: newStatus };
       if (newStatus === 'COMPLETED') {
-        if (!actualQty) { toast.error('Actual Qty wajib diisi untuk complete'); return; }
+        if (!actualQty) { toast.error('Actual Qty is required to complete'); return; }
         body.actualQty = Number(actualQty);
       }
       await api.patch(`/production-orders/${id}`, body);
-      toast.success(`Status diubah ke ${newStatus}`);
+      toast.success(`Status updated to ${newStatus}`);
       queryClient.invalidateQueries(['production-order', id]);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal update status');
+      toast.error(err.response?.data?.message || 'Failed to update status');
     }
   }
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div></div>;
-  if (!po) return <p className="text-slate-500">Production Order tidak ditemukan</p>;
+  if (!po) return <p className="text-slate-500">Production Order not found</p>;
 
   return (
     <div className="space-y-6">
@@ -87,22 +87,22 @@ export default function ProductionDetailPage() {
 
       <div className="bg-white p-6 rounded-xl border border-slate-200">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-slate-700">Bahan Baku Dipakai</h3>
+          <h3 className="font-semibold text-slate-700">Raw Materials Used</h3>
           {['QUEUED', 'SCHEDULED', 'IN_PROGRESS'].includes(po.status) && (
-            <button onClick={() => setAddingInput(true)} className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg">+ Tambah</button>
+            <button onClick={() => setAddingInput(true)} className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg">+ Add</button>
           )}
         </div>
 
         {addingInput && (
           <form onSubmit={handleAddInput} className="mb-4 p-4 bg-slate-50 rounded-lg space-y-3">
             <select value={inputForm.rawLotId} onChange={(e) => setInputForm({ ...inputForm, rawLotId: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
-              <option value="">Pilih Raw Lot</option>
+              <option value="">Select Raw Lot</option>
               {availableLots?.map((l) => <option key={l.id} value={l.id}>{l.internal_lot_no} — {l.material?.name} ({formatNumber(l.initial_qty)} {l.material?.unit})</option>)}
             </select>
             <input type="number" step="0.01" placeholder="Qty Used" value={inputForm.qtyUsed} onChange={(e) => setInputForm({ ...inputForm, qtyUsed: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             <div className="flex gap-2">
-              <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm">Simpan</button>
-              <button type="button" onClick={() => setAddingInput(false)} className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm">Batal</button>
+              <button type="submit" className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm">Save</button>
+              <button type="button" onClick={() => setAddingInput(false)} className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm">Cancel</button>
             </div>
           </form>
         )}
@@ -125,7 +125,7 @@ export default function ProductionDetailPage() {
                 <td className="py-2 text-slate-500">{formatDate(inp.used_at)}</td>
               </tr>
             ))}
-            {(!po.inputs || po.inputs.length === 0) && <tr><td colSpan={4} className="py-4 text-center text-slate-500">Belum ada input</td></tr>}
+            {(!po.inputs || po.inputs.length === 0) && <tr><td colSpan={4} className="py-4 text-center text-slate-500">No inputs yet</td></tr>}
           </tbody>
         </table>
       </div>

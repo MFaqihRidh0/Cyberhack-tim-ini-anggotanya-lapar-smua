@@ -24,18 +24,18 @@ export default function FinishedGoodDetailPage() {
 
   async function handleWarehouse(e) {
     e.preventDefault();
-    if (!warehouseForm.zone || !warehouseForm.position) { toast.error('Zone dan Position wajib diisi'); return; }
+    if (!warehouseForm.zone || !warehouseForm.position) { toast.error('Zone and Position are required'); return; }
     try {
       await api.patch(`/finished-lots/${id}/warehouse`, { warehouseZone: warehouseForm.zone, warehousePosition: warehouseForm.position });
-      toast.success('Posisi gudang diupdate');
+      toast.success('Warehouse position updated');
       queryClient.invalidateQueries(['finished-lot', id]);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal update');
+      toast.error(err.response?.data?.message || 'Failed to update');
     }
   }
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div></div>;
-  if (!lot) return <p className="text-slate-500">Lot tidak ditemukan</p>;
+  if (!lot) return <p className="text-slate-500">Lot not found</p>;
 
   return (
     <div className="space-y-6">
@@ -57,13 +57,13 @@ export default function FinishedGoodDetailPage() {
             <label className="text-sm text-slate-600">Position</label>
             <input type="text" value={warehouseForm.position} onChange={(e) => setWarehouseForm({ ...warehouseForm, position: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Rak-01" />
           </div>
-          <button type="submit" className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm">Set Gudang</button>
+          <button type="submit" className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm">Set Location</button>
         </form>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200">
-          <h3 className="font-semibold text-slate-700 mb-4">Riwayat Status</h3>
+          <h3 className="font-semibold text-slate-700 mb-4">Status History</h3>
           <LotTimeline stages={lot.stages} />
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col items-center">

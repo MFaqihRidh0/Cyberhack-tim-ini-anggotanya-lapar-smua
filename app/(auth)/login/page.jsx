@@ -7,9 +7,9 @@ import toast from 'react-hot-toast';
 import { Leaf, Package, FlaskConical, Settings } from 'lucide-react';
 
 const FEATURES = [
-  { Icon: Package, title: 'Lot Tracking End-to-End', desc: 'Dari supplier masuk hingga customer terima' },
-  { Icon: FlaskConical, title: 'QC Digital Terintegrasi', desc: 'Tidak ada lagi form kertas atau WhatsApp' },
-  { Icon: Settings, title: 'PPIC Queue Otomatis', desc: 'Jadwal produksi real-time dengan prioritas' },
+  { Icon: Package, title: 'End-to-End Lot Tracking', desc: 'From supplier intake to customer delivery' },
+  { Icon: FlaskConical, title: 'Integrated Digital QC', desc: 'No more paper forms or WhatsApp approvals' },
+  { Icon: Settings, title: 'Automated PPIC Queue', desc: 'Real-time production scheduling with priority' },
 ];
 
 const ACCOUNTS = [
@@ -28,16 +28,16 @@ export default function LoginPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!email || !password) {
-      toast.error('Email dan password wajib diisi');
+      toast.error('Email and password are required');
       return;
     }
     setLoading(true);
     try {
       await login(email, password);
-      toast.success('Login berhasil');
+      toast.success('Login successful');
       router.push('/dashboard');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Login gagal';
+      const msg = err.response?.data?.message || 'Login failed';
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -64,14 +64,14 @@ export default function LoginPage() {
 
           <div className="left-body">
             <h1 className="left-headline">
-              Satu sistem,<br />
-              <em>tanpa batas</em><br />
-              input ulang.
+              One system,<br />
+              <em>zero limits</em><br />
+              on traceability.
             </h1>
 
             <p className="left-sub">
-              Platform manajemen manufaktur untuk Sima Arome — dari bahan baku
-              masuk hingga sampel dikirim ke customer.
+              Manufacturing management platform for Sima Arome — from raw
+              material intake to sample dispatch.
             </p>
 
             <div className="features">
@@ -106,8 +106,8 @@ export default function LoginPage() {
             </div>
 
             <div className="right-header">
-              <h2>Selamat datang kembali</h2>
-              <p>Masuk ke akun SimaTrack Anda untuk melanjutkan</p>
+              <h2>Welcome back</h2>
+              <p>Sign in to your SimaTrack account to continue</p>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -134,12 +134,12 @@ export default function LoginPage() {
               </div>
 
               <button type="submit" className="btn-login" disabled={loading}>
-                {loading ? 'Memproses...' : 'Masuk ke SimaTrack'}
+                {loading ? 'Signing in...' : 'Sign in to SimaTrack'}
               </button>
             </form>
 
             <div className="divider">
-              <span>akun uji coba</span>
+              <span>test accounts</span>
             </div>
 
             <div className="test-accounts">

@@ -5,7 +5,7 @@ import StatusBadge from '@/components/shared/StatusBadge';
 
 export default function LotTimeline({ stages }) {
   if (!stages || stages.length === 0) {
-    return <p className="text-sm text-slate-500">Belum ada riwayat stage</p>;
+    return <p className="text-sm text-slate-500">No stage history yet</p>;
   }
 
   return (

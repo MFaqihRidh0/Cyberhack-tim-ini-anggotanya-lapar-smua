@@ -23,10 +23,10 @@ export default function ScanPage() {
         stopScanner();
         router.push(`/finished-goods/${data.id}`);
       } else {
-        toast.error('QR code tidak valid');
+        toast.error('Invalid QR code');
       }
     } catch {
-      toast.error('QR code tidak dapat dibaca');
+      toast.error('Could not read QR code');
     }
   }
 
@@ -43,7 +43,7 @@ export default function ScanPage() {
       );
       setScanning(true);
     } catch (err) {
-      setError('Tidak dapat mengakses kamera. Pastikan izin kamera diberikan.');
+      setError('Cannot access camera. Please grant camera permission.');
       setScanning(false);
     }
   }
@@ -75,7 +75,7 @@ export default function ScanPage() {
 
         {!scanning ? (
           <button onClick={startScanner} className="flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition">
-            <Camera className="h-5 w-5" /> Mulai Scan
+            <Camera className="h-5 w-5" /> Start Scan
           </button>
         ) : (
           <button onClick={stopScanner} className="flex items-center gap-2 px-6 py-3 bg-slate-500 hover:bg-slate-600 text-white rounded-lg font-medium transition">
@@ -84,7 +84,7 @@ export default function ScanPage() {
         )}
 
         <p className="mt-4 text-sm text-slate-500 text-center">
-          Arahkan kamera ke QR code pada label lot untuk melihat detail
+          Point camera at a lot label QR code to view details
         </p>
       </div>
     </div>

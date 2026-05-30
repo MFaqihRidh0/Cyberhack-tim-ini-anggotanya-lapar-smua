@@ -24,7 +24,7 @@ export default function QCPage() {
 
   async function handleSubmitQC(e) {
     e.preventDefault();
-    if (!form.result) { toast.error('Result wajib dipilih'); return; }
+    if (!form.result) { toast.error('Please select a result'); return; }
 
     const body = {
       ...(inspecting.type === 'raw' ? { rawLotId: inspecting.id } : { finishedLotId: inspecting.id }),
@@ -38,13 +38,13 @@ export default function QCPage() {
 
     try {
       await api.post('/qc-inspections', body);
-      toast.success('QC Inspection berhasil disimpan');
+      toast.success('QC Inspection saved successfully');
       setInspecting(null);
       setForm({ colorScore: '', odorScore: '', textureScore: '', moistureLevel: '', result: '', notes: '' });
       queryClient.invalidateQueries(['raw-lots-qc-pending']);
       queryClient.invalidateQueries(['finished-lots-qc-pending']);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal menyimpan QC');
+      toast.error(err.response?.data?.message || 'Failed to save QC inspection');
     }
   }
 
@@ -55,8 +55,8 @@ export default function QCPage() {
       <h1 className="text-2xl font-bold text-slate-800">QC Inspections</h1>
 
       <div className="flex gap-2">
-        <button onClick={() => setTab('raw')} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'raw' ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>Bahan Baku</button>
-        <button onClick={() => setTab('finished')} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'finished' ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>Produk Jadi</button>
+        <button onClick={() => setTab('raw')} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'raw' ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>Raw Materials</button>
+        <button onClick={() => setTab('finished')} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'finished' ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>Finished Goods</button>
       </div>
 
       {inspecting && (
@@ -85,7 +85,7 @@ export default function QCPage() {
               <div>
                 <label className="text-sm text-slate-600">Result</label>
                 <select value={form.result} onChange={(e) => setForm({ ...form, result: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
-                  <option value="">Pilih</option>
+                  <option value="">Select</option>
                   <option value="APPROVED">APPROVED</option>
                   <option value="REJECTED">REJECTED</option>
                   <option value="ON_HOLD">ON HOLD</option>
@@ -96,8 +96,8 @@ export default function QCPage() {
                 <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" rows={2} />
               </div>
               <div className="flex gap-2">
-                <button type="submit" className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium">Simpan</button>
-                <button type="button" onClick={() => setInspecting(null)} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium">Batal</button>
+                <button type="submit" className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium">Save</button>
+                <button type="button" onClick={() => setInspecting(null)} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium">Cancel</button>
               </div>
             </form>
           </div>
@@ -111,7 +111,7 @@ export default function QCPage() {
               <th className="text-left px-4 py-3 font-medium text-slate-600">Lot No.</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">{tab === 'raw' ? 'Material' : 'Product'}</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">Aksi</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -125,7 +125,7 @@ export default function QCPage() {
                 </td>
               </tr>
             ))}
-            {lots?.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-500">Tidak ada lot pending QC</td></tr>}
+            {lots?.length === 0 && <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-500">No lots pending QC</td></tr>}
           </tbody>
         </table>
       </div>

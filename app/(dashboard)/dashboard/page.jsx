@@ -81,11 +81,11 @@ export default function DashboardPage() {
       <div className="bg-white rounded-xl p-6 border border-slate-200">
         <div className="flex items-center gap-3 mb-4">
           <Activity className="h-5 w-5 text-slate-600" />
-          <h3 className="font-semibold text-slate-700">Aktivitas Terbaru</h3>
+          <h3 className="font-semibold text-slate-700">Recent Activity</h3>
         </div>
         <div className="space-y-3">
           {recentActivity?.length === 0 && (
-            <p className="text-sm text-slate-500">Belum ada aktivitas</p>
+            <p className="text-sm text-slate-500">No activity yet</p>
           )}
           {recentActivity?.map((act, i) => (
             <div key={i} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">

@@ -21,7 +21,7 @@ export default function Navbar({ user, onToggleSidebar = () => {} }) {
       <div className="flex items-center gap-4">
         <button
           onClick={onToggleSidebar}
-          aria-label="Buka menu"
+          aria-label="Open menu"
           className="flex items-center justify-center rounded-lg transition-colors"
           style={{ width: '40px', height: '40px', color: '#C2580A', backgroundColor: 'transparent' }}
           onMouseEnter={(e) => {
@@ -73,7 +73,7 @@ export default function Navbar({ user, onToggleSidebar = () => {} }) {
       <div className="flex items-center gap-3">
         {user?.name && (
           <span className="hidden sm:block text-sm" style={{ color: '#57544E' }}>
-            Hai, <span style={{ fontWeight: 600, color: '#3D3B36' }}>{user.name}</span>
+            Hi, <span style={{ fontWeight: 600, color: '#3D3B36' }}>{user.name}</span>
           </span>
         )}
         <button

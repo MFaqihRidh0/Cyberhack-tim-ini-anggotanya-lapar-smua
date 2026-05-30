@@ -24,7 +24,7 @@ export default function FinishedGoodsPage() {
       <div className="flex gap-2 flex-wrap">
         {STATUSES.map((s) => (
           <button key={s} onClick={() => setStatus(s)} className={`px-3 py-1.5 text-sm rounded-lg transition ${status === s ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-            {s || 'Semua'}
+            {s || 'All'}
           </button>
         ))}
       </div>
@@ -41,7 +41,7 @@ export default function FinishedGoodsPage() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Memuat...</td></tr>}
+            {isLoading && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>}
             {data?.map((lot) => (
               <tr key={lot.id} className="border-b border-slate-100 hover:bg-slate-50">
                 <td className="px-4 py-3"><Link href={`/finished-goods/${lot.id}`} className="font-medium text-blue-600 hover:underline">{lot.lot_number}</Link></td>
@@ -51,7 +51,7 @@ export default function FinishedGoodsPage() {
                 <td className="px-4 py-3"><StatusBadge status={lot.current_status} /></td>
               </tr>
             ))}
-            {data?.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Tidak ada data</td></tr>}
+            {data?.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">No data</td></tr>}
           </tbody>
         </table>
       </div>

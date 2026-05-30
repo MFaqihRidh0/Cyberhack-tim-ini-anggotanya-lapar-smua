@@ -17,7 +17,7 @@ export default function DeliveryOrdersPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Delivery Orders</h1>
         <Link href="/delivery-orders/new" className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition">
-          <Plus className="h-4 w-4" /> Terima DO Baru
+          <Plus className="h-4 w-4" /> Receive New DO
         </Link>
       </div>
 
@@ -27,14 +27,14 @@ export default function DeliveryOrdersPage() {
             <tr>
               <th className="text-left px-4 py-3 font-medium text-slate-600">No. DO</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Supplier</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">Tanggal</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">Jumlah Lot</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">Catatan</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Date</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Lots</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Notes</th>
             </tr>
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Memuat...</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>
             )}
             {data?.map((d) => (
               <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50">
@@ -46,7 +46,7 @@ export default function DeliveryOrdersPage() {
               </tr>
             ))}
             {data?.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Belum ada Delivery Order</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">No Delivery Orders yet</td></tr>
             )}
           </tbody>
         </table>

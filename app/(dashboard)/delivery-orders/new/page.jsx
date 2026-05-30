@@ -34,17 +34,17 @@ export default function NewDeliveryOrderPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!supplierId) { toast.error('Supplier wajib dipilih'); return; }
+    if (!supplierId) { toast.error('Please select a supplier'); return; }
     const validItems = items.filter((i) => i.materialId && i.qty);
-    if (validItems.length === 0) { toast.error('Minimal 1 item dengan material dan qty'); return; }
+    if (validItems.length === 0) { toast.error('At least 1 item with material and qty required'); return; }
 
     setLoading(true);
     try {
       await api.post('/delivery-orders', { supplierId, notes, items: validItems });
-      toast.success('Delivery Order berhasil dibuat');
+      toast.success('Delivery Order created successfully');
       router.push('/delivery-orders');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal membuat DO');
+      toast.error(err.response?.data?.message || 'Failed to create DO');
     } finally {
       setLoading(false);
     }
@@ -52,30 +52,30 @@ export default function NewDeliveryOrderPage() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">Terima Delivery Order Baru</h1>
+      <h1 className="text-2xl font-bold text-slate-800 mb-6">Receive New Delivery Order</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Header */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 space-y-4">
-          <p className="text-sm text-slate-500">No. DO akan di-generate otomatis (format: DO-YYYYMMDD-XXX)</p>
+          <p className="text-sm text-slate-500">DO number will be auto-generated (format: DO-YYYYMMDD-XXX)</p>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Supplier</label>
             <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
-              <option value="">Pilih Supplier</option>
+              <option value="">Select Supplier</option>
               {suppliers?.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Catatan</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" rows={2} placeholder="Catatan surat jalan, dll" />
+            <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" rows={2} placeholder="Delivery note remarks, etc." />
           </div>
         </div>
 
         {/* Items */}
         <div className="bg-white p-6 rounded-xl border border-slate-200">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-700">Daftar Material</h3>
+            <h3 className="font-semibold text-slate-700">Material List</h3>
             <button type="button" onClick={addItem} className="flex items-center gap-1 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg">
-              <Plus className="h-4 w-4" /> Tambah Item
+              <Plus className="h-4 w-4" /> Add Item
             </button>
           </div>
 
@@ -94,7 +94,7 @@ export default function NewDeliveryOrderPage() {
                   <div className="col-span-2">
                     <label className="text-xs text-slate-500">Material</label>
                     <select value={item.materialId} onChange={(e) => updateItem(i, 'materialId', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                      <option value="">Pilih Material</option>
+                      <option value="">Select Material</option>
                       {materials?.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.code}) — {m.unit}</option>)}
                     </select>
                   </div>
@@ -103,11 +103,11 @@ export default function NewDeliveryOrderPage() {
                     <input type="number" step="0.01" value={item.qty} onChange={(e) => updateItem(i, 'qty', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="100" />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-500">No. Lot Supplier</label>
-                    <input type="text" value={item.supplierLotNo} onChange={(e) => updateItem(i, 'supplierLotNo', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Opsional" />
+                    <label className="text-xs text-slate-500">Supplier Lot No.</label>
+                    <input type="text" value={item.supplierLotNo} onChange={(e) => updateItem(i, 'supplierLotNo', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Optional" />
                   </div>
                   <div className="col-span-2">
-                    <label className="text-xs text-slate-500">Tanggal Expiry</label>
+                    <label className="text-xs text-slate-500">Expiry Date</label>
                     <input type="date" value={item.expiryDate} onChange={(e) => updateItem(i, 'expiryDate', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
                   </div>
                 </div>
@@ -117,7 +117,7 @@ export default function NewDeliveryOrderPage() {
         </div>
 
         <button type="submit" disabled={loading} className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition disabled:opacity-50">
-          {loading ? 'Menyimpan...' : `Simpan DO (${items.filter(i => i.materialId && i.qty).length} item)`}
+          {loading ? 'Saving...' : `Save DO (${items.filter(i => i.materialId && i.qty).length} item)`}
         </button>
       </form>
     </div>

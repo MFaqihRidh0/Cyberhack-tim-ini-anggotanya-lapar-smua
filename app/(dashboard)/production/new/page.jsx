@@ -18,7 +18,7 @@ export default function NewProductionOrderPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.productId || !form.targetQty) { toast.error('Product dan Target Qty wajib diisi'); return; }
+    if (!form.productId || !form.targetQty) { toast.error('Product and Target Qty are required'); return; }
     setLoading(true);
     try {
       const res = await api.post('/production-orders', {
@@ -28,10 +28,10 @@ export default function NewProductionOrderPage() {
         priority: Number(form.priority),
         notes: form.notes || null,
       });
-      toast.success('Production Order berhasil dibuat');
+      toast.success('Production Order created successfully');
       router.push(`/production/${res.data.data.id}`);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal membuat PO');
+      toast.error(err.response?.data?.message || 'Failed to create production order');
     } finally {
       setLoading(false);
     }
@@ -39,12 +39,12 @@ export default function NewProductionOrderPage() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">Buat Production Order Baru</h1>
+      <h1 className="text-2xl font-bold text-slate-800 mb-6">New Production Order</h1>
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-xl border border-slate-200">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Product</label>
           <select value={form.productId} onChange={(e) => setForm({ ...form, productId: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
-            <option value="">Pilih Product</option>
+            <option value="">Select Product</option>
             {products?.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
           </select>
         </div>
@@ -65,7 +65,7 @@ export default function NewProductionOrderPage() {
           <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" rows={3} />
         </div>
         <button type="submit" disabled={loading} className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition disabled:opacity-50">
-          {loading ? 'Menyimpan...' : 'Simpan'}
+          {loading ? 'Saving...' : 'Save'}
         </button>
       </form>
     </div>

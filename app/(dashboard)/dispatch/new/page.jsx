@@ -18,8 +18,8 @@ export default function NewDispatchPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.finishedLotId || !form.customerName || !form.quantity) { toast.error('Lot, Customer, dan Quantity wajib diisi'); return; }
-    if (form.destination === 'EXPORT' && !form.country) { toast.error('Country wajib diisi untuk EXPORT'); return; }
+    if (!form.finishedLotId || !form.customerName || !form.quantity) { toast.error('Lot, Customer, and Quantity are required'); return; }
+    if (form.destination === 'EXPORT' && !form.country) { toast.error('Country is required for EXPORT'); return; }
     setLoading(true);
     try {
       await api.post('/sample-dispatches', {
@@ -27,10 +27,10 @@ export default function NewDispatchPage() {
         quantity: Number(form.quantity),
         country: form.destination === 'EXPORT' ? form.country : null,
       });
-      toast.success('Sample Dispatch berhasil dibuat');
+      toast.success('Sample Dispatch created successfully');
       router.push('/dispatch');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal membuat dispatch');
+      toast.error(err.response?.data?.message || 'Failed to create dispatch');
     } finally {
       setLoading(false);
     }
@@ -38,12 +38,12 @@ export default function NewDispatchPage() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">Kirim Sampel Baru</h1>
+      <h1 className="text-2xl font-bold text-slate-800 mb-6">New Sample Dispatch</h1>
       <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-xl border border-slate-200">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Finished Lot</label>
           <select value={form.finishedLotId} onChange={(e) => setForm({ ...form, finishedLotId: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
-            <option value="">Pilih Lot</option>
+            <option value="">Select Lot</option>
             {finishedLots?.map((l) => <option key={l.id} value={l.id}>{l.lot_number} — {l.product?.name} ({l.quantity} {l.unit})</option>)}
           </select>
         </div>
@@ -95,7 +95,7 @@ export default function NewDispatchPage() {
           <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" rows={2} />
         </div>
         <button type="submit" disabled={loading} className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition disabled:opacity-50">
-          {loading ? 'Menyimpan...' : 'Kirim Sampel'}
+          {loading ? 'Saving...' : 'Send Sample'}
         </button>
       </form>
     </div>
