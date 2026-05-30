@@ -15,8 +15,12 @@ export async function POST(request) {
       .eq('email', email)
       .single();
 
-    if (error || !user || !user.is_active) {
+    if (error || !user) {
       return Response.json({ success: false, data: null, message: 'Email atau password salah' }, { status: 401 });
+    }
+
+    if (user.is_active === false) {
+      return Response.json({ success: false, data: null, message: 'Akun tidak aktif' }, { status: 401 });
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
