@@ -1,16 +1,20 @@
 version: 1
-frontend:
-  phases:
-    preBuild:
-      commands:
-        - bash -c 'cd frontend && npm install'
-    build:
-      commands:
-        - bash -c 'cd frontend && npx prisma generate && npm run build'
-  artifacts:
-    baseDirectory: frontend/.next
-    files:
-      - '**/*'
-  cache:
-    paths:
-      - frontend/node_modules/**
+applications:
+  - appRoot: frontend
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm install
+        build:
+          commands:
+            - npx prisma generate
+            - npm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**
+          - .next/cache/**
