@@ -1,4 +1,4 @@
-import prisma from '@/lib/server/prisma';
+import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized } from '@/lib/server/auth';
 
 export async function GET(request) {
@@ -7,13 +7,10 @@ export async function GET(request) {
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
-  const where = status ? { currentStatus: status } : {};
 
-  const lots = await prisma.finishedGoodsLot.findMany({
-    where,
-    include: { product: true, productionOrder: { select: { id: true, orderNumber: true } }, _count: { select: { sampleDispatches: true } } },
-    orderBy: { producedAt: 'desc' },
-  });
+  let query = supabase.from('finished_goods_lots').select('*, product:products(*), production_order:production_orders(id, order_number)').order('produced_at', { ascending: false });
+  if (status) query = query.eq('current_status', status);
 
-  return Response.json({ success: true, data: lots, message: 'Berhasil' });
+  const { data } = await query;
+  return Response.json({ success: true, data: data || [], message: 'Berhasil' });
 }

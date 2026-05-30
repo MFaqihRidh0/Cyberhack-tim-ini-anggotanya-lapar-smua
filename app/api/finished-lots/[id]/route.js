@@ -1,4 +1,4 @@
-import prisma from '@/lib/server/prisma';
+import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized } from '@/lib/server/auth';
 
 export async function GET(request, { params }) {
@@ -6,17 +6,12 @@ export async function GET(request, { params }) {
   if (!user) return unauthorized();
 
   const { id } = await params;
-  const lot = await prisma.finishedGoodsLot.findUnique({
-    where: { id },
-    include: {
-      product: true,
-      productionOrder: { include: { inputs: { include: { rawLot: { select: { id: true, internalLotNo: true } }, material: true } } } },
-      stages: { include: { actor: { select: { id: true, name: true, role: true } } }, orderBy: { timestamp: 'asc' } },
-      qcInspections: { include: { inspectedBy: { select: { id: true, name: true } } }, orderBy: { inspectedAt: 'desc' } },
-      sampleDispatches: { include: { dispatchedBy: { select: { id: true, name: true } } }, orderBy: { dispatchDate: 'desc' } },
-    },
-  });
+  const { data: lot } = await supabase.from('finished_goods_lots').select('*, product:products(*), production_order:production_orders(*)').eq('id', id).single();
+  if (!lot) return Response.json({ success: false, data: null, message: 'Lot tidak ditemukan' }, { status: 404 });
 
-  if (!lot) return Response.json({ success: false, data: null, message: 'Finished Goods Lot tidak ditemukan' }, { status: 404 });
-  return Response.json({ success: true, data: lot, message: 'Berhasil' });
+  const { data: stages } = await supabase.from('finished_lot_stages').select('*, actor:users(id, name, role)').eq('finished_lot_id', id).order('timestamp');
+  const { data: qcInspections } = await supabase.from('qc_inspections').select('*, inspected_by:users(id, name)').eq('finished_lot_id', id).order('inspected_at', { ascending: false });
+  const { data: sampleDispatches } = await supabase.from('sample_dispatches').select('*, dispatched_by:users(id, name)').eq('finished_lot_id', id).order('dispatch_date', { ascending: false });
+
+  return Response.json({ success: true, data: { ...lot, stages, qcInspections, sampleDispatches }, message: 'Berhasil' });
 }

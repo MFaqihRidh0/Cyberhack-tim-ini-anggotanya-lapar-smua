@@ -1,4 +1,4 @@
-import prisma from '@/lib/server/prisma';
+import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized } from '@/lib/server/auth';
 
 export async function GET(request, { params }) {
@@ -6,19 +6,26 @@ export async function GET(request, { params }) {
   if (!user) return unauthorized();
 
   const { id } = await params;
-  const lot = await prisma.rawMaterialLot.findUnique({
-    where: { id },
-    include: {
-      material: true, supplier: true, deliveryOrder: true,
-      stages: { include: { actor: { select: { id: true, name: true, role: true } } }, orderBy: { timestamp: 'asc' } },
-      qcInspections: { include: { inspectedBy: { select: { id: true, name: true, role: true } } }, orderBy: { inspectedAt: 'desc' } },
-      productionInputs: { include: { productionOrder: { select: { id: true, orderNumber: true, status: true } } } },
-    },
+  const { data: lot } = await supabase.from('raw_material_lots')
+    .select('*, material:materials(*), supplier:suppliers(*), delivery_order:delivery_orders(*)')
+    .eq('id', id).single();
+
+  if (!lot) return Response.json({ success: false, data: null, message: 'Lot tidak ditemukan' }, { status: 404 });
+
+  const { data: stages } = await supabase.from('raw_lot_stages')
+    .select('*, actor:users(id, name, role)').eq('raw_lot_id', id).order('timestamp');
+
+  const { data: qcInspections } = await supabase.from('qc_inspections')
+    .select('*, inspected_by:users(id, name, role)').eq('raw_lot_id', id).order('inspected_at', { ascending: false });
+
+  const { data: productionInputs } = await supabase.from('production_inputs')
+    .select('*, production_order:production_orders(id, order_number, status)').eq('raw_lot_id', id);
+
+  const used = (productionInputs || []).reduce((sum, i) => sum + i.qty_used, 0);
+
+  return Response.json({
+    success: true,
+    data: { ...lot, stages, qcInspections, productionInputs, remainingQty: lot.initial_qty - used },
+    message: 'Berhasil',
   });
-
-  if (!lot) return Response.json({ success: false, data: null, message: 'Raw Material Lot tidak ditemukan' }, { status: 404 });
-
-  const used = (lot.productionInputs || []).reduce((sum, i) => sum + i.qtyUsed, 0);
-  const data = { ...lot, remainingQty: lot.initialQty - used };
-  return Response.json({ success: true, data, message: 'Berhasil' });
 }

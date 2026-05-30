@@ -1,4 +1,4 @@
-import prisma from '@/lib/server/prisma';
+import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized, forbidden, checkRole } from '@/lib/server/auth';
 
 export async function PATCH(request, { params }) {
@@ -9,13 +9,10 @@ export async function PATCH(request, { params }) {
   const { id } = await params;
   const body = await request.json().catch(() => ({}));
 
-  const dispatch = await prisma.sampleDispatch.findUnique({ where: { id } });
-  if (!dispatch) return Response.json({ success: false, data: null, message: 'Dispatch tidak ditemukan' }, { status: 404 });
+  const { data, error } = await supabase.from('sample_dispatches')
+    .update({ received_confirmed: true, received_at: body.receivedAt || new Date().toISOString() })
+    .eq('id', id).select().single();
 
-  const updated = await prisma.sampleDispatch.update({
-    where: { id },
-    data: { receivedConfirmed: true, receivedAt: body.receivedAt ? new Date(body.receivedAt) : new Date() },
-  });
-
-  return Response.json({ success: true, data: updated, message: 'Dispatch dikonfirmasi' });
+  if (error) return Response.json({ success: false, data: null, message: error.message }, { status: 400 });
+  return Response.json({ success: true, data, message: 'Dispatch dikonfirmasi' });
 }

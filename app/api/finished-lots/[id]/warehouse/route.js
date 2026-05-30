@@ -1,4 +1,4 @@
-import prisma from '@/lib/server/prisma';
+import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized, forbidden, checkRole } from '@/lib/server/auth';
 
 export async function PATCH(request, { params }) {
@@ -7,27 +7,26 @@ export async function PATCH(request, { params }) {
   if (!checkRole(user, 'OPERATOR', 'MANAGER')) return forbidden();
 
   const { id } = await params;
-  const { warehouseZone, warehousePosition } = await request.json();
+  const body = await request.json();
+  const warehouseZone = body.warehouseZone || body.warehouse_zone;
+  const warehousePosition = body.warehousePosition || body.warehouse_position;
 
   if (!warehouseZone || !warehousePosition) {
     return Response.json({ success: false, data: null, message: 'warehouseZone dan warehousePosition wajib diisi' }, { status: 400 });
   }
 
-  const lot = await prisma.finishedGoodsLot.findUnique({ where: { id } });
+  const { data: lot } = await supabase.from('finished_goods_lots').select('id, current_status').eq('id', id).single();
   if (!lot) return Response.json({ success: false, data: null, message: 'Lot tidak ditemukan' }, { status: 404 });
 
-  const moveToWarehouse = ['PRODUCED', 'QC_APPROVED'].includes(lot.currentStatus);
+  const moveToWarehouse = ['PRODUCED', 'QC_APPROVED'].includes(lot.current_status);
+  const updateData = { warehouse_zone: warehouseZone, warehouse_position: warehousePosition };
+  if (moveToWarehouse) updateData.current_status = 'IN_WAREHOUSE';
 
-  const updated = await prisma.$transaction(async (tx) => {
-    const u = await tx.finishedGoodsLot.update({
-      where: { id },
-      data: { warehouseZone, warehousePosition, ...(moveToWarehouse ? { currentStatus: 'IN_WAREHOUSE' } : {}) },
-    });
-    if (moveToWarehouse) {
-      await tx.finishedLotStage.create({ data: { finishedLotId: id, stage: 'IN_WAREHOUSE', actorId: user.id, notes: `Disimpan di ${warehouseZone} / ${warehousePosition}` } });
-    }
-    return u;
-  });
+  await supabase.from('finished_goods_lots').update(updateData).eq('id', id);
 
-  return Response.json({ success: true, data: updated, message: moveToWarehouse ? 'Status → IN_WAREHOUSE' : 'Posisi gudang diupdate' });
+  if (moveToWarehouse) {
+    await supabase.from('finished_lot_stages').insert({ finished_lot_id: id, stage: 'IN_WAREHOUSE', actor_id: user.id, notes: `Disimpan di ${warehouseZone} / ${warehousePosition}` });
+  }
+
+  return Response.json({ success: true, data: { id, ...updateData }, message: moveToWarehouse ? 'Status → IN_WAREHOUSE' : 'Posisi gudang diupdate' });
 }

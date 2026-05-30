@@ -1,15 +1,12 @@
-import prisma from '@/lib/server/prisma';
+import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized, forbidden, checkRole } from '@/lib/server/auth';
 
 export async function GET(request) {
   const user = await verifyAuth(request);
   if (!user) return unauthorized();
 
-  const orders = await prisma.deliveryOrder.findMany({
-    include: { supplier: true, _count: { select: { rawLots: true } } },
-    orderBy: { receivedDate: 'desc' },
-  });
-  return Response.json({ success: true, data: orders, message: 'Berhasil' });
+  const { data } = await supabase.from('delivery_orders').select('*, supplier:suppliers(*)').order('received_date', { ascending: false });
+  return Response.json({ success: true, data: data || [], message: 'Berhasil' });
 }
 
 export async function POST(request) {
@@ -18,14 +15,20 @@ export async function POST(request) {
   if (!checkRole(user, 'OPERATOR', 'MANAGER')) return forbidden();
 
   const body = await request.json();
-  const { doNumber, supplierId, receivedDate, notes } = body;
+  const { do_number, supplier_id, received_date, notes } = body;
+  // Support both camelCase and snake_case from frontend
+  const doNumber = do_number || body.doNumber;
+  const supplierId = supplier_id || body.supplierId;
+
   if (!doNumber || !supplierId) {
     return Response.json({ success: false, data: null, message: 'doNumber dan supplierId wajib diisi' }, { status: 400 });
   }
 
-  const order = await prisma.deliveryOrder.create({
-    data: { doNumber, supplierId, receivedDate: receivedDate ? new Date(receivedDate) : undefined, notes },
-    include: { supplier: true },
-  });
-  return Response.json({ success: true, data: order, message: 'Delivery Order berhasil dibuat' }, { status: 201 });
+  const { data, error } = await supabase.from('delivery_orders')
+    .insert({ do_number: doNumber, supplier_id: supplierId, received_date: received_date || new Date().toISOString(), notes })
+    .select('*, supplier:suppliers(*)')
+    .single();
+
+  if (error) return Response.json({ success: false, data: null, message: error.message }, { status: 400 });
+  return Response.json({ success: true, data, message: 'Delivery Order berhasil dibuat' }, { status: 201 });
 }

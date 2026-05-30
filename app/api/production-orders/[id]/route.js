@@ -1,4 +1,4 @@
-import prisma from '@/lib/server/prisma';
+import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized, forbidden, checkRole } from '@/lib/server/auth';
 import { generateLotNumber } from '@/lib/server/lotNumber';
 
@@ -7,17 +7,13 @@ export async function GET(request, { params }) {
   if (!user) return unauthorized();
 
   const { id } = await params;
-  const order = await prisma.productionOrder.findUnique({
-    where: { id },
-    include: {
-      product: true, createdBy: { select: { id: true, name: true } },
-      inputs: { include: { rawLot: { select: { id: true, internalLotNo: true, currentStatus: true } }, material: true } },
-      finishedLots: true,
-    },
-  });
+  const { data: order } = await supabase.from('production_orders').select('*, product:products(*), created_by:users(id, name)').eq('id', id).single();
+  if (!order) return Response.json({ success: false, data: null, message: 'PO tidak ditemukan' }, { status: 404 });
 
-  if (!order) return Response.json({ success: false, data: null, message: 'Production Order tidak ditemukan' }, { status: 404 });
-  return Response.json({ success: true, data: order, message: 'Berhasil' });
+  const { data: inputs } = await supabase.from('production_inputs').select('*, raw_lot:raw_material_lots(id, internal_lot_no, current_status), material:materials(*)').eq('production_order_id', id);
+  const { data: finishedLots } = await supabase.from('finished_goods_lots').select('*').eq('production_order_id', id);
+
+  return Response.json({ success: true, data: { ...order, inputs: inputs || [], finishedLots: finishedLots || [] }, message: 'Berhasil' });
 }
 
 export async function PATCH(request, { params }) {
@@ -27,50 +23,45 @@ export async function PATCH(request, { params }) {
 
   const { id } = await params;
   const body = await request.json();
-  const { status, scheduledDate, priority, actualQty, notes } = body;
 
-  const order = await prisma.productionOrder.findUnique({ where: { id }, include: { product: true, inputs: { include: { rawLot: { include: { productionInputs: true } } } } } });
+  const { data: order } = await supabase.from('production_orders').select('*, product:products(*)').eq('id', id).single();
   if (!order) return Response.json({ success: false, data: null, message: 'PO tidak ditemukan' }, { status: 404 });
 
   const updateData = {};
-  if (scheduledDate !== undefined) updateData.scheduledDate = scheduledDate ? new Date(scheduledDate) : null;
-  if (priority !== undefined) updateData.priority = Number(priority);
-  if (notes !== undefined) updateData.notes = notes;
+  if (body.scheduledDate !== undefined || body.scheduled_date !== undefined) updateData.scheduled_date = body.scheduledDate || body.scheduled_date;
+  if (body.priority !== undefined) updateData.priority = Number(body.priority);
+  if (body.notes !== undefined) updateData.notes = body.notes;
 
+  const status = body.status;
   if (status) {
     updateData.status = status;
-    if (status === 'IN_PROGRESS') updateData.startedAt = new Date();
+    if (status === 'IN_PROGRESS') updateData.started_at = new Date().toISOString();
 
     if (status === 'COMPLETED') {
+      const actualQty = body.actualQty || body.actual_qty;
       if (!actualQty) return Response.json({ success: false, data: null, message: 'actualQty wajib diisi saat COMPLETED' }, { status: 400 });
-      updateData.actualQty = Number(actualQty);
-      updateData.completedAt = new Date();
+      updateData.actual_qty = Number(actualQty);
+      updateData.completed_at = new Date().toISOString();
+
+      await supabase.from('production_orders').update(updateData).eq('id', id);
 
       // Auto-create FinishedGoodsLot
-      const lotNumber = await generateLotNumber('SA-FG');
-      await prisma.$transaction(async (tx) => {
-        await tx.productionOrder.update({ where: { id }, data: updateData });
+      const lot_number = await generateLotNumber('SA-FG');
+      const { data: fg } = await supabase.from('finished_goods_lots').insert({
+        lot_number, product_id: order.product_id, production_order_id: id,
+        quantity: Number(actualQty), unit: order.product.unit, current_status: 'PRODUCED',
+      }).select().single();
 
-        const fg = await tx.finishedGoodsLot.create({
-          data: { lotNumber, productId: order.productId, productionOrderId: id, quantity: Number(actualQty), unit: order.product.unit, currentStatus: 'PRODUCED' },
-        });
-        await tx.finishedLotStage.create({ data: { finishedLotId: fg.id, stage: 'PRODUCED', actorId: user.id, notes: 'Produksi selesai' } });
+      if (fg) {
+        await supabase.from('finished_lot_stages').insert({ finished_lot_id: fg.id, stage: 'PRODUCED', actor_id: user.id, notes: 'Produksi selesai' });
+      }
 
-        // Update raw lots to CONSUMED if fully used
-        for (const input of order.inputs) {
-          const totalUsed = input.rawLot.productionInputs.reduce((s, i) => s + i.qtyUsed, 0);
-          if (totalUsed >= input.rawLot.initialQty) {
-            await tx.rawMaterialLot.update({ where: { id: input.rawLotId }, data: { currentStatus: 'CONSUMED' } });
-            await tx.rawLotStage.create({ data: { rawLotId: input.rawLotId, stage: 'CONSUMED', actorId: user.id, notes: 'Habis dipakai produksi' } });
-          }
-        }
-      });
-
-      const updated = await prisma.productionOrder.findUnique({ where: { id }, include: { product: true, finishedLots: true } });
-      return Response.json({ success: true, data: updated, message: 'Production Order COMPLETED, Finished Goods Lot dibuat' });
+      const updated = await supabase.from('production_orders').select('*, product:products(*)').eq('id', id).single();
+      return Response.json({ success: true, data: updated.data, message: 'PO COMPLETED, Finished Goods Lot dibuat' });
     }
   }
 
-  const updated = await prisma.productionOrder.update({ where: { id }, data: updateData, include: { product: true } });
+  await supabase.from('production_orders').update(updateData).eq('id', id);
+  const { data: updated } = await supabase.from('production_orders').select('*, product:products(*)').eq('id', id).single();
   return Response.json({ success: true, data: updated, message: 'Production Order diupdate' });
 }
