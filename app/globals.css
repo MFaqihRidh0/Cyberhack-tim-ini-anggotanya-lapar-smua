@@ -1,113 +1,82 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* === PRIMARY — Amber/Orange (brand Sima Arome) === */
+  /* PRIMARY — Amber/Orange */
   --color-primary-50:  #FFF8ED;
   --color-primary-100: #FFEECF;
   --color-primary-200: #FFD98A;
   --color-primary-300: #FFBC45;
-  --color-primary-400: #FFA012;  /* Main brand color */
-  --color-primary-500: #F97316;  /* CTA, active states */
+  --color-primary-400: #FFA012;
+  --color-primary-500: #F97316;
   --color-primary-600: #C2580A;
   --color-primary-700: #9A3F07;
   --color-primary-800: #7C2E04;
   --color-primary-900: #431502;
 
-  /* === NEUTRAL — Warm Gray === */
-  --color-neutral-50:  #FAFAF8;  /* Page background */
-  --color-neutral-100: #F5F4F0;  /* Card background */
-  --color-neutral-200: #ECEAE3;  /* Border, divider */
-  --color-neutral-300: #D6D3C8;  /* Subtle border */
-  --color-neutral-400: #A8A49A;  /* Placeholder text */
-  --color-neutral-500: #7D7A72;  /* Secondary text */
-  --color-neutral-600: #57544E;  /* Body text */
-  --color-neutral-700: #3D3B36;  /* Strong text */
-  --color-neutral-800: #28261F;  /* Heading */
-  --color-neutral-900: #16140E;  /* Display heading */
+  /* NEUTRAL — Warm Gray */
+  --color-neutral-50:  #FAFAF8;
+  --color-neutral-100: #F5F4F0;
+  --color-neutral-200: #ECEAE3;
+  --color-neutral-300: #D6D3C8;
+  --color-neutral-400: #A8A49A;
+  --color-neutral-500: #7D7A72;
+  --color-neutral-600: #57544E;
+  --color-neutral-700: #3D3B36;
+  --color-neutral-800: #28261F;
+  --color-neutral-900: #16140E;
 
-  /* === SEMANTIC COLORS === */
-  --color-success-bg:   #ECFDF5;
-  --color-success-text: #065F46;
+  /* SEMANTIC */
+  --color-success-bg:     #ECFDF5;
+  --color-success-text:   #065F46;
   --color-success-border: #6EE7B7;
-
-  --color-warning-bg:   #FFFBEB;
-  --color-warning-text: #92400E;
+  --color-warning-bg:     #FFFBEB;
+  --color-warning-text:   #92400E;
   --color-warning-border: #FCD34D;
+  --color-danger-bg:      #FEF2F2;
+  --color-danger-text:    #991B1B;
+  --color-danger-border:  #FCA5A5;
+  --color-info-bg:        #EFF6FF;
+  --color-info-text:      #1E40AF;
+  --color-info-border:    #93C5FD;
+  --color-purple-bg:      #F5F3FF;
+  --color-purple-text:    #4C1D95;
+  --color-purple-border:  #C4B5FD;
 
-  --color-danger-bg:    #FEF2F2;
-  --color-danger-text:  #991B1B;
-  --color-danger-border: #FCA5A5;
-
-  --color-info-bg:      #EFF6FF;
-  --color-info-text:    #1E40AF;
-  --color-info-border:  #93C5FD;
-
-  --color-purple-bg:    #F5F3FF;
-  --color-purple-text:  #4C1D95;
-  --color-purple-border: #C4B5FD;
-
-  /* === SIDEBAR === */
-  --sidebar-bg: #1C1A14;          /* Dark warm, seperti kayu gelap */
-  --sidebar-text: #E8E4D9;
-  --sidebar-text-muted: #8A8479;
-  --sidebar-active-bg: #2E2B22;
+  /* SIDEBAR */
+  --sidebar-bg:          #1C1A14;
+  --sidebar-text:        #E8E4D9;
+  --sidebar-text-muted:  #8A8479;
+  --sidebar-active-bg:   #2E2B22;
   --sidebar-active-text: #FFA012;
-  --sidebar-border: #2E2B22;
+  --sidebar-border:      #2E2B22;
 
-  /* === LAYOUT === */
-  --page-bg: #FAFAF8;
-  --card-bg: #FFFFFF;
-  --card-border: #ECEAE3;
-  --card-shadow: 0 1px 3px rgba(22, 20, 14, 0.06),
-                 0 1px 2px rgba(22, 20, 14, 0.04);
-  --card-shadow-hover: 0 4px 12px rgba(22, 20, 14, 0.08),
-                       0 2px 4px rgba(22, 20, 14, 0.06);
+  /* LAYOUT */
+  --page-bg:         #FAFAF8;
+  --card-bg:         #FFFFFF;
+  --card-border:     #ECEAE3;
+  --card-shadow:     0 1px 3px rgba(22,20,14,0.06), 0 1px 2px rgba(22,20,14,0.04);
+  --card-shadow-hover: 0 4px 12px rgba(22,20,14,0.08), 0 2px 4px rgba(22,20,14,0.06);
 
-  /* === SPACING & RADIUS === */
-  --radius-sm:  6px;
-  --radius-md:  10px;
-  --radius-lg:  14px;
-  --radius-xl:  20px;
+  /* RADIUS */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
   --radius-full: 9999px;
-
-  /* === Aliases lama (kompatibilitas) === */
-  --background: var(--page-bg);
-  --foreground: var(--color-neutral-700);
 }
 
+/* ── Base ─────────────────────────────────── */
 body {
+  background-color: var(--page-bg);
   color: var(--color-neutral-700);
-  background: var(--page-bg);
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-weight: 400;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3 {
-  color: var(--color-neutral-800);
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .font-display {
-    font-family: 'DM Serif Display', serif;
-  }
-
-  .font-mono {
-    font-family: 'JetBrains Mono', monospace;
-  }
-}
-
+/* ── Component classes ────────────────────── */
 @layer components {
-  /* === Cards === */
   .card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
@@ -120,7 +89,6 @@ h1, h2, h3 {
     box-shadow: var(--card-shadow-hover);
   }
 
-  /* === Lot Number Display === */
   .lot-number {
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
@@ -134,7 +102,6 @@ h1, h2, h3 {
     display: inline-block;
   }
 
-  /* === Status Badges === */
   .badge {
     display: inline-flex;
     align-items: center;
@@ -143,7 +110,6 @@ h1, h2, h3 {
     border-radius: var(--radius-full);
     font-size: 12px;
     font-weight: 500;
-    font-family: 'DM Sans', sans-serif;
   }
   .badge::before {
     content: '';
@@ -153,7 +119,6 @@ h1, h2, h3 {
     background: currentColor;
   }
 
-  /* === Buttons === */
   .btn-primary {
     background: var(--color-primary-500);
     color: white;
@@ -162,14 +127,13 @@ h1, h2, h3 {
     border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 500;
-    font-family: 'DM Sans', sans-serif;
     cursor: pointer;
     transition: background 0.15s, transform 0.1s;
     display: inline-flex;
     align-items: center;
     gap: 7px;
   }
-  .btn-primary:hover { background: var(--color-primary-600); }
+  .btn-primary:hover  { background: var(--color-primary-600); }
   .btn-primary:active { transform: scale(0.98); }
 
   .btn-secondary {
@@ -180,9 +144,8 @@ h1, h2, h3 {
     border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 500;
-    font-family: 'DM Sans', sans-serif;
     cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
+    transition: background 0.15s;
     display: inline-flex;
     align-items: center;
     gap: 7px;
@@ -197,22 +160,19 @@ h1, h2, h3 {
     border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 500;
-    font-family: 'DM Sans', sans-serif;
     cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
+    transition: background 0.15s;
     display: inline-flex;
     align-items: center;
     gap: 7px;
   }
 
-  /* === Form Inputs === */
   .input {
     width: 100%;
     padding: 9px 13px;
     border: 1px solid var(--color-neutral-200);
     border-radius: var(--radius-md);
     font-size: 14px;
-    font-family: 'DM Sans', sans-serif;
     color: var(--color-neutral-800);
     background: white;
     transition: border-color 0.15s, box-shadow 0.15s;
@@ -225,4 +185,10 @@ h1, h2, h3 {
   .input::placeholder {
     color: var(--color-neutral-400);
   }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .font-display  { font-family: 'DM Serif Display', serif; }
+  .font-mono-code { font-family: 'JetBrains Mono', monospace; }
 }

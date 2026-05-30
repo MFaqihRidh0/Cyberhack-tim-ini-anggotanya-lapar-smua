@@ -23,14 +23,20 @@ export default function DashboardLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: '#FAFAF8' }}
+      >
+        <div
+          className="animate-spin rounded-full h-8 w-8"
+          style={{ borderBottom: '2px solid #F97316', border: '2px solid #FFEECF', borderBottomColor: '#F97316' }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen" style={{ backgroundColor: '#FAFAF8' }}>
       <Sidebar user={user} />
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar user={user} />
