@@ -32,6 +32,7 @@ export async function POST(request) {
   const order_number = await generateLotNumber('PO');
   const { data, error } = await supabase.from('production_orders').insert({
     order_number, product_id: productId, target_qty: Number(targetQty), created_by_id: user.id,
+    status: 'QUEUED',
     scheduled_date: body.scheduledDate || body.scheduled_date || null,
     priority: body.priority ? Number(body.priority) : 0, notes: body.notes || null,
   }).select('*, product:products(*)').single();
