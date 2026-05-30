@@ -16,7 +16,7 @@ export async function POST(request) {
       .single();
 
     if (error || !user) {
-      return Response.json({ success: false, data: null, message: 'Email atau password salah' }, { status: 401 });
+      return Response.json({ success: false, data: null, message: 'Email atau password salah', debug: { error: error?.message, code: error?.code } }, { status: 401 });
     }
 
     if (user.is_active === false) {
