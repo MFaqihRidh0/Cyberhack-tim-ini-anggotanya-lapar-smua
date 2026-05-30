@@ -10,6 +10,7 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -36,10 +37,10 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#FAFAF8' }}>
-      <Sidebar user={user} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar user={user} />
+    <div className="min-h-screen" style={{ backgroundColor: '#FAFAF8' }}>
+      <Sidebar user={user} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex flex-col min-h-screen min-w-0">
+        <Navbar user={user} onToggleSidebar={() => setSidebarOpen((v) => !v)} />
         <main className="flex-1 p-8">{children}</main>
       </div>
     </div>

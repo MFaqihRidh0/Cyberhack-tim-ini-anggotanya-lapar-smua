@@ -13,7 +13,6 @@ import {
   QrCode,
   Leaf,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const ALL_MENU = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['OPERATOR', 'QC_STAFF', 'PPIC', 'MANAGER'] },
@@ -37,19 +36,48 @@ function getInitials(name) {
     .toUpperCase();
 }
 
-export default function Sidebar({ user }) {
+export default function Sidebar({ user, open = false, onClose = () => {} }) {
   const pathname = usePathname();
   const role = user?.role || 'OPERATOR';
   const menu = ALL_MENU.filter((item) => item.roles.includes(role));
 
   return (
-    <aside
-      className="w-[220px] shrink-0 min-h-screen flex flex-col"
-      style={{ backgroundColor: '#1C1A14', borderRight: '1px solid #2E2B22' }}
-    >
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(22, 20, 14, 0.45)',
+          backdropFilter: 'blur(2px)',
+          WebkitBackdropFilter: 'blur(2px)',
+          zIndex: 40,
+          opacity: open ? 1 : 0,
+          visibility: open ? 'visible' : 'hidden',
+          transition: 'opacity 0.25s ease, visibility 0.25s ease',
+        }}
+      />
+
+      <aside
+        className="flex flex-col"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          height: '100vh',
+          width: '280px',
+          backgroundColor: '#1C1A14',
+          borderRight: '1px solid #2E2B22',
+          zIndex: 50,
+          transform: open ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow: open ? '4px 0 32px rgba(0,0,0,0.35)' : 'none',
+        }}
+      >
       {/* Header */}
       <div className="px-5 py-6" style={{ borderBottom: '1px solid #2E2B22' }}>
-        <Link href="/dashboard" className="flex items-center gap-2.5">
+        <Link href="/dashboard" onClick={onClose} className="flex items-center gap-2.5">
           <Leaf className="h-7 w-7" style={{ color: '#F97316' }} />
           <span
             style={{
@@ -73,6 +101,7 @@ export default function Sidebar({ user }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className="flex items-center gap-3 mx-2 my-0.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
               style={{
                 backgroundColor: active ? '#2E2B22' : 'transparent',
@@ -115,6 +144,7 @@ export default function Sidebar({ user }) {
           </div>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

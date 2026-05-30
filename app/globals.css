@@ -75,6 +75,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Sembunyikan cursor default saat leaf cursor aktif (hanya device pointer) */
+html.leaf-cursor-active,
+html.leaf-cursor-active * {
+  cursor: none !important;
+}
+
 /* ── Component classes ────────────────────── */
 @layer components {
   .card {

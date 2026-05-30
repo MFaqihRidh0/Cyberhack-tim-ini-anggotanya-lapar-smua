@@ -1,5 +1,6 @@
 import './globals.css';
 import Providers from '@/components/providers';
+import LeafCursor from '@/components/LeafCursor';
 
 export const metadata = {
   title: 'SimaTrack — Sima Arome Tracking System',
@@ -19,6 +20,7 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <Providers>{children}</Providers>
+        <LeafCursor />
       </body>
     </html>
   );
