@@ -1,5 +1,6 @@
 import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized, forbidden, checkRole } from '@/lib/server/auth';
+import { logAudit } from '@/lib/server/audit';
 
 export async function GET(request) {
   const user = await verifyAuth(request);
@@ -49,6 +50,8 @@ export async function POST(request) {
     await supabase.from('finished_goods_lots').update({ current_status: newStatus }).eq('id', finished_lot_id);
     await supabase.from('finished_lot_stages').insert({ finished_lot_id, stage: newStatus, actor_id: user.id, notes: `QC: ${result}` });
   }
+
+  await logAudit({ action: 'QC_INSPECTION', entityType: raw_lot_id ? 'RAW_LOT' : 'FINISHED_LOT', entityId: raw_lot_id || finished_lot_id, description: `QC ${result} — Color:${body.colorScore||'-'} Odor:${body.odorScore||'-'} Texture:${body.textureScore||'-'}`, metadata: { result, color_score: body.colorScore, odor_score: body.odorScore }, user });
 
   return Response.json({ success: true, data: qc, message: 'QC Inspection berhasil disimpan' }, { status: 201 });
 }

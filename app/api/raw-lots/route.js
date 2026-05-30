@@ -1,6 +1,7 @@
 import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized, forbidden, checkRole } from '@/lib/server/auth';
 import { generateLotNumber } from '@/lib/server/lotNumber';
+import { logAudit } from '@/lib/server/audit';
 
 export async function GET(request) {
   const user = await verifyAuth(request);
@@ -51,6 +52,9 @@ export async function POST(request) {
 
   // Create initial stage
   await supabase.from('raw_lot_stages').insert({ raw_lot_id: lot.id, stage: 'INCOMING', actor_id: user.id, notes: 'Lot diterima' });
+
+  // Audit log
+  await logAudit({ action: 'CREATE', entityType: 'RAW_LOT', entityId: lot.id, description: `Raw lot ${lot.internal_lot_no} diterima dari supplier`, metadata: { lot_no: lot.internal_lot_no, qty: lot.initial_qty }, user });
 
   return Response.json({ success: true, data: lot, message: 'Raw Material Lot berhasil dibuat' }, { status: 201 });
 }

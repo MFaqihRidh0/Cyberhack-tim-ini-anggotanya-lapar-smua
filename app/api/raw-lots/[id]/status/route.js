@@ -1,5 +1,6 @@
 import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized, forbidden } from '@/lib/server/auth';
+import { logAudit } from '@/lib/server/audit';
 
 const VALID_TRANSITIONS = {
   INCOMING: ['QC_PENDING', 'ON_HOLD'],
@@ -46,6 +47,8 @@ export async function PATCH(request, { params }) {
 
   await supabase.from('raw_material_lots').update({ current_status: status }).eq('id', id);
   await supabase.from('raw_lot_stages').insert({ raw_lot_id: id, stage: status, actor_id: user.id, notes });
+
+  await logAudit({ action: 'STATUS_CHANGE', entityType: 'RAW_LOT', entityId: id, description: `Status diubah dari ${lot.current_status} ke ${status}`, metadata: { from: lot.current_status, to: status, notes }, user });
 
   return Response.json({ success: true, data: { id, current_status: status }, message: `Status lot diubah ke ${status}` });
 }

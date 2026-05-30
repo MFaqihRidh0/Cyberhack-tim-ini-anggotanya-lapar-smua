@@ -1,5 +1,6 @@
 import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized, forbidden, checkRole } from '@/lib/server/auth';
+import { logAudit } from '@/lib/server/audit';
 
 export async function GET(request) {
   const user = await verifyAuth(request);
@@ -30,5 +31,8 @@ export async function POST(request) {
     .single();
 
   if (error) return Response.json({ success: false, data: null, message: error.message }, { status: 400 });
+
+  await logAudit({ action: 'CREATE', entityType: 'DELIVERY_ORDER', entityId: data.id, description: `DO ${doNumber} diterima dari supplier`, metadata: { do_number: doNumber, supplier_id: supplierId }, user });
+
   return Response.json({ success: true, data, message: 'Delivery Order berhasil dibuat' }, { status: 201 });
 }
