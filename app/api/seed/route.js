@@ -37,21 +37,27 @@ export async function POST(request) {
 
   // Seed suppliers
   for (const s of SUPPLIERS) {
-    const { error } = await supabase.from('suppliers').upsert(s, { onConflict: 'code' });
+    const { data: existing } = await supabase.from('suppliers').select('id').eq('code', s.code).limit(1);
+    if (existing && existing.length > 0) { results.suppliers++; continue; }
+    const { error } = await supabase.from('suppliers').insert(s);
     if (!error) results.suppliers++;
     else results.errors.push(`Supplier ${s.code}: ${error.message}`);
   }
 
   // Seed materials
   for (const m of MATERIALS) {
-    const { error } = await supabase.from('materials').upsert(m, { onConflict: 'code' });
+    const { data: existing } = await supabase.from('materials').select('id').eq('code', m.code).limit(1);
+    if (existing && existing.length > 0) { results.materials++; continue; }
+    const { error } = await supabase.from('materials').insert(m);
     if (!error) results.materials++;
     else results.errors.push(`Material ${m.code}: ${error.message}`);
   }
 
   // Seed products
   for (const p of PRODUCTS) {
-    const { error } = await supabase.from('products').upsert(p, { onConflict: 'code' });
+    const { data: existing } = await supabase.from('products').select('id').eq('code', p.code).limit(1);
+    if (existing && existing.length > 0) { results.products++; continue; }
+    const { error } = await supabase.from('products').insert(p);
     if (!error) results.products++;
     else results.errors.push(`Product ${p.code}: ${error.message}`);
   }
