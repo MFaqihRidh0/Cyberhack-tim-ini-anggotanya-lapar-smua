@@ -44,7 +44,7 @@ export default function NewDispatchPage() {
           <label className="block text-sm font-medium text-slate-700 mb-1">Finished Lot</label>
           <select value={form.finishedLotId} onChange={(e) => setForm({ ...form, finishedLotId: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
             <option value="">Pilih Lot</option>
-            {finishedLots?.map((l) => <option key={l.id} value={l.id}>{l.lotNumber} — {l.product?.name} ({l.quantity} {l.unit})</option>)}
+            {finishedLots?.map((l) => <option key={l.id} value={l.id}>{l.lot_number} — {l.product?.name} ({l.quantity} {l.unit})</option>)}
           </select>
         </div>
         <div>

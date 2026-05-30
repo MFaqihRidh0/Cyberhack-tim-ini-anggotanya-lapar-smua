@@ -59,7 +59,6 @@ export default function QCPage() {
         <button onClick={() => setTab('finished')} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${tab === 'finished' ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-600'}`}>Produk Jadi</button>
       </div>
 
-      {/* QC Form Modal */}
       {inspecting && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
@@ -105,7 +104,6 @@ export default function QCPage() {
         </div>
       )}
 
-      {/* List */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
@@ -119,11 +117,11 @@ export default function QCPage() {
           <tbody>
             {lots?.map((lot) => (
               <tr key={lot.id} className="border-b border-slate-100">
-                <td className="px-4 py-3 font-medium text-slate-800">{tab === 'raw' ? lot.internalLotNo : lot.lotNumber}</td>
+                <td className="px-4 py-3 font-medium text-slate-800">{tab === 'raw' ? lot.internal_lot_no : lot.lot_number}</td>
                 <td className="px-4 py-3 text-slate-600">{tab === 'raw' ? lot.material?.name : lot.product?.name}</td>
-                <td className="px-4 py-3"><StatusBadge status={lot.currentStatus} /></td>
+                <td className="px-4 py-3"><StatusBadge status={lot.current_status} /></td>
                 <td className="px-4 py-3">
-                  <button onClick={() => setInspecting({ id: lot.id, type: tab, lotNumber: tab === 'raw' ? lot.internalLotNo : lot.lotNumber })} className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg">Inspect</button>
+                  <button onClick={() => setInspecting({ id: lot.id, type: tab, lotNumber: tab === 'raw' ? lot.internal_lot_no : lot.lot_number })} className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg">Inspect</button>
                 </td>
               </tr>
             ))}

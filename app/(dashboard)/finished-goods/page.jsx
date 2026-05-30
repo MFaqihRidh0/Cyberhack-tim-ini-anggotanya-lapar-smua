@@ -44,11 +44,11 @@ export default function FinishedGoodsPage() {
             {isLoading && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Memuat...</td></tr>}
             {data?.map((lot) => (
               <tr key={lot.id} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="px-4 py-3"><Link href={`/finished-goods/${lot.id}`} className="font-medium text-blue-600 hover:underline">{lot.lotNumber}</Link></td>
+                <td className="px-4 py-3"><Link href={`/finished-goods/${lot.id}`} className="font-medium text-blue-600 hover:underline">{lot.lot_number}</Link></td>
                 <td className="px-4 py-3 text-slate-600">{lot.product?.name}</td>
                 <td className="px-4 py-3 text-slate-600">{formatNumber(lot.quantity)} {lot.unit}</td>
-                <td className="px-4 py-3 text-slate-600">{lot.warehouseZone ? `${lot.warehouseZone} / ${lot.warehousePosition}` : '-'}</td>
-                <td className="px-4 py-3"><StatusBadge status={lot.currentStatus} /></td>
+                <td className="px-4 py-3 text-slate-600">{lot.warehouse_zone ? `${lot.warehouse_zone} / ${lot.warehouse_position}` : '-'}</td>
+                <td className="px-4 py-3"><StatusBadge status={lot.current_status} /></td>
               </tr>
             ))}
             {data?.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Tidak ada data</td></tr>}

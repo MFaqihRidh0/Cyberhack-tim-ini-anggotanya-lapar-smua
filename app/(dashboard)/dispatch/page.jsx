@@ -51,16 +51,16 @@ export default function DispatchPage() {
             {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">Memuat...</td></tr>}
             {data?.map((d) => (
               <tr key={d.id} className="border-b border-slate-100">
-                <td className="px-4 py-3 font-medium text-slate-800">{d.dispatchNumber}</td>
-                <td className="px-4 py-3 text-slate-600">{d.customerName}</td>
-                <td className="px-4 py-3 text-slate-600">{d.finishedLot?.lotNumber}</td>
+                <td className="px-4 py-3 font-medium text-slate-800">{d.dispatch_number}</td>
+                <td className="px-4 py-3 text-slate-600">{d.customer_name}</td>
+                <td className="px-4 py-3 text-slate-600">{d.finished_lot?.lot_number}</td>
                 <td className="px-4 py-3 text-slate-600">{d.destination}{d.country ? ` (${d.country})` : ''}</td>
-                <td className="px-4 py-3 text-slate-600">{formatDate(d.dispatchDate)}</td>
+                <td className="px-4 py-3 text-slate-600">{formatDate(d.dispatch_date)}</td>
                 <td className="px-4 py-3">
-                  {d.receivedConfirmed ? <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Confirmed</span> : <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">Pending</span>}
+                  {d.received_confirmed ? <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Confirmed</span> : <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">Pending</span>}
                 </td>
                 <td className="px-4 py-3">
-                  {!d.receivedConfirmed && <button onClick={() => handleConfirm(d.id)} className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg">Konfirmasi</button>}
+                  {!d.received_confirmed && <button onClick={() => handleConfirm(d.id)} className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg">Konfirmasi</button>}
                 </td>
               </tr>
             ))}

@@ -52,13 +52,13 @@ export default function ProductionPage() {
             {data?.map((po) => (
               <tr key={po.id} className="border-b border-slate-100 hover:bg-slate-50">
                 <td className="px-4 py-3">
-                  <Link href={`/production/${po.id}`} className="font-medium text-blue-600 hover:underline">{po.orderNumber}</Link>
+                  <Link href={`/production/${po.id}`} className="font-medium text-blue-600 hover:underline">{po.order_number}</Link>
                 </td>
                 <td className="px-4 py-3 text-slate-600">{po.product?.name}</td>
-                <td className="px-4 py-3 text-slate-600">{formatNumber(po.targetQty)}</td>
+                <td className="px-4 py-3 text-slate-600">{formatNumber(po.target_qty)}</td>
                 <td className="px-4 py-3 text-slate-600">{po.priority}</td>
                 <td className="px-4 py-3"><StatusBadge status={po.status} /></td>
-                <td className="px-4 py-3 text-slate-600">{formatDate(po.scheduledDate)}</td>
+                <td className="px-4 py-3 text-slate-600">{formatDate(po.scheduled_date)}</td>
               </tr>
             ))}
             {data?.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">Tidak ada data</td></tr>}

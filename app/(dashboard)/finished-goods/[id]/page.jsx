@@ -41,14 +41,13 @@ export default function FinishedGoodDetailPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">{lot.lotNumber}</h1>
+          <h1 className="text-2xl font-bold text-slate-800">{lot.lot_number}</h1>
           <p className="text-slate-500 mt-1">{lot.product?.name} — {formatNumber(lot.quantity)} {lot.unit}</p>
         </div>
-        <StatusBadge status={lot.currentStatus} />
+        <StatusBadge status={lot.current_status} />
       </div>
 
-      {/* Warehouse Form (OPERATOR) */}
-      {['OPERATOR', 'MANAGER'].includes(user?.role) && ['PRODUCED', 'QC_APPROVED'].includes(lot.currentStatus) && (
+      {['OPERATOR', 'MANAGER'].includes(user?.role) && ['PRODUCED', 'QC_APPROVED'].includes(lot.current_status) && (
         <form onSubmit={handleWarehouse} className="bg-white p-4 rounded-xl border border-slate-200 flex items-end gap-3">
           <div className="flex-1">
             <label className="text-sm text-slate-600">Zone</label>
@@ -69,11 +68,10 @@ export default function FinishedGoodDetailPage() {
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col items-center">
           <h3 className="font-semibold text-slate-700 mb-4">QR Code</h3>
-          <QRDisplay lotId={lot.id} lotType="finished" lotNumber={lot.lotNumber} />
+          <QRDisplay lotId={lot.id} lotType="finished" lotNumber={lot.lot_number} />
         </div>
       </div>
 
-      {/* Dispatches */}
       {lot.sampleDispatches?.length > 0 && (
         <div className="bg-white p-6 rounded-xl border border-slate-200">
           <h3 className="font-semibold text-slate-700 mb-4">Sample Dispatches</h3>
@@ -81,12 +79,12 @@ export default function FinishedGoodDetailPage() {
             {lot.sampleDispatches.map((d) => (
               <div key={d.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                 <div>
-                  <span className="font-medium text-slate-800">{d.dispatchNumber}</span>
-                  <span className="ml-3 text-sm text-slate-600">{d.customerName}</span>
+                  <span className="font-medium text-slate-800">{d.dispatch_number}</span>
+                  <span className="ml-3 text-sm text-slate-600">{d.customer_name}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-slate-500">{d.destination}</span>
-                  {d.receivedConfirmed ? <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Confirmed</span> : <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Pending</span>}
+                  {d.received_confirmed ? <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Confirmed</span> : <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">Pending</span>}
                 </div>
               </div>
             ))}
