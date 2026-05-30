@@ -28,7 +28,7 @@ export default function DeliveryOrdersPage() {
               <th className="text-left px-4 py-3 font-medium text-slate-600">No. DO</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Supplier</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Tanggal</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">Jumlah Lot</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Catatan</th>
             </tr>
           </thead>
           <tbody>
@@ -37,10 +37,10 @@ export default function DeliveryOrdersPage() {
             )}
             {data?.map((d) => (
               <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-slate-800">{d.doNumber}</td>
+                <td className="px-4 py-3 font-medium text-slate-800">{d.do_number}</td>
                 <td className="px-4 py-3 text-slate-600">{d.supplier?.name}</td>
-                <td className="px-4 py-3 text-slate-600">{formatDate(d.receivedDate)}</td>
-                <td className="px-4 py-3 text-slate-600">{d._count?.rawLots ?? d.rawLots?.length ?? 0}</td>
+                <td className="px-4 py-3 text-slate-600">{formatDate(d.received_date)}</td>
+                <td className="px-4 py-3 text-slate-600">{d.notes || '-'}</td>
               </tr>
             ))}
             {data?.length === 0 && (
