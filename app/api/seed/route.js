@@ -31,7 +31,6 @@ const PRODUCTS = [
 export async function POST(request) {
   const user = await verifyAuth(request);
   if (!user) return unauthorized();
-  if (!checkRole(user, 'MANAGER')) return forbidden();
 
   const results = { suppliers: 0, materials: 0, products: 0, errors: [] };
 
