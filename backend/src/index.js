@@ -21,6 +21,7 @@ app.use('/api/qc-inspections', require('./routes/qcInspections.routes'));
 app.use('/api/production-orders', require('./routes/productionOrders.routes'));
 app.use('/api/finished-lots', require('./routes/finishedLots.routes'));
 app.use('/api/sample-dispatches', require('./routes/sampleDispatches.routes'));
+app.use('/api/dashboard', require('./routes/dashboard.routes'));
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

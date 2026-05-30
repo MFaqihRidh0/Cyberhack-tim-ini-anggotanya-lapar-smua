@@ -1,4 +1,5 @@
 const prisma = require('../utils/prisma');
+const QRCode = require('qrcode');
 
 async function list(req, res, next) {
   try {
@@ -113,4 +114,31 @@ async function updateWarehouse(req, res, next) {
   }
 }
 
-module.exports = { list, getById, updateWarehouse };
+async function generateQR(req, res, next) {
+  try {
+    const lot = await prisma.finishedGoodsLot.findUnique({
+      where: { id: req.params.id },
+      include: { product: { select: { name: true } } },
+    });
+
+    if (!lot) {
+      return res.status(404).json({ success: false, data: null, message: 'Finished Goods Lot tidak ditemukan' });
+    }
+
+    const qrData = JSON.stringify({
+      type: 'FINISHED_LOT',
+      id: lot.id,
+      lotNumber: lot.lotNumber,
+      product: lot.product.name,
+      status: lot.currentStatus,
+    });
+
+    const buffer = await QRCode.toBuffer(qrData, { type: 'png', width: 300, margin: 2 });
+    res.set('Content-Type', 'image/png');
+    res.send(buffer);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { list, getById, updateWarehouse, generateQR };
