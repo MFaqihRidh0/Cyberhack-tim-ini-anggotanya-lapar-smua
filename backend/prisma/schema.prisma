@@ -1,0 +1,290 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OPERATOR
+  QC_STAFF
+  PPIC
+  MANAGER
+}
+
+enum RawLotStatus {
+  INCOMING
+  QC_PENDING
+  QC_APPROVED
+  QC_REJECTED
+  IN_QUEUE
+  IN_PRODUCTION
+  CONSUMED
+  ON_HOLD
+}
+
+enum FinishedLotStatus {
+  PRODUCED
+  QC_PENDING
+  QC_APPROVED
+  QC_REJECTED
+  IN_WAREHOUSE
+  PARTIALLY_DISPATCHED
+  FULLY_DISPATCHED
+  ON_HOLD
+}
+
+enum ProductionStatus {
+  QUEUED
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum DestinationType {
+  LOCAL
+  EXPORT
+}
+
+enum QCResult {
+  APPROVED
+  REJECTED
+  ON_HOLD
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdRawLots    RawMaterialLot[]  @relation("RawLotCreator")
+  rawLotStages      RawLotStage[]
+  qcInspections     QCInspection[]
+  productionOrders  ProductionOrder[] @relation("PPICOwner")
+  finishedLotStages FinishedLotStage[]
+  sampleDispatches  SampleDispatch[]
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  contactName String?
+  phone       String?
+  email       String?
+  address     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  rawLots        RawMaterialLot[]
+  deliveryOrders DeliveryOrder[]
+}
+
+model Material {
+  id            String  @id @default(cuid())
+  name          String
+  code          String  @unique
+  category      String
+  unit          String
+  shelfLifeDays Int?
+  storageNote   String?
+  isActive      Boolean @default(true)
+
+  rawLots          RawMaterialLot[]
+  productionInputs ProductionInput[]
+}
+
+model Product {
+  id            String  @id @default(cuid())
+  name          String
+  code          String  @unique
+  category      String
+  unit          String
+  shelfLifeDays Int?
+  isActive      Boolean @default(true)
+
+  finishedLots     FinishedGoodsLot[]
+  productionOrders ProductionOrder[]
+}
+
+model DeliveryOrder {
+  id           String   @id @default(cuid())
+  doNumber     String   @unique
+  receivedDate DateTime @default(now())
+  notes        String?
+
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+
+  rawLots RawMaterialLot[]
+}
+
+model RawMaterialLot {
+  id               String       @id @default(cuid())
+  internalLotNo    String       @unique
+  supplierLotNo    String?
+  currentStatus    RawLotStatus @default(INCOMING)
+  initialQty       Float
+  receivedDate     DateTime     @default(now())
+  manufacturedDate DateTime?
+  expiryDate       DateTime?
+  notes            String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  deliveryOrderId String?
+  deliveryOrder   DeliveryOrder? @relation(fields: [deliveryOrderId], references: [id])
+
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+
+  materialId  String
+  material    Material @relation(fields: [materialId], references: [id])
+
+  createdById String
+  createdBy   User     @relation("RawLotCreator", fields: [createdById], references: [id])
+
+  stages           RawLotStage[]
+  qcInspections    QCInspection[]
+  productionInputs ProductionInput[]
+}
+
+model RawLotStage {
+  id        String       @id @default(cuid())
+  stage     RawLotStatus
+  notes     String?
+  timestamp DateTime     @default(now())
+
+  rawLotId String
+  rawLot   RawMaterialLot @relation(fields: [rawLotId], references: [id])
+
+  actorId String
+  actor   User   @relation(fields: [actorId], references: [id])
+}
+
+model QCInspection {
+  id            String   @id @default(cuid())
+  result        QCResult
+  inspectedAt   DateTime @default(now())
+  colorScore    Int?
+  odorScore     Int?
+  textureScore  Int?
+  moistureLevel Float?
+  notes         String?
+
+  rawLotId      String?
+  rawLot        RawMaterialLot?   @relation(fields: [rawLotId], references: [id])
+
+  finishedLotId String?
+  finishedLot   FinishedGoodsLot? @relation(fields: [finishedLotId], references: [id])
+
+  inspectedById String
+  inspectedBy   User   @relation(fields: [inspectedById], references: [id])
+}
+
+model ProductionOrder {
+  id            String           @id @default(cuid())
+  orderNumber   String           @unique
+  status        ProductionStatus @default(QUEUED)
+  priority      Int              @default(0)
+  targetQty     Float
+  actualQty     Float?
+  scheduledDate DateTime?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  notes         String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("PPICOwner", fields: [createdById], references: [id])
+
+  inputs       ProductionInput[]
+  finishedLots FinishedGoodsLot[]
+}
+
+model ProductionInput {
+  id      String   @id @default(cuid())
+  qtyUsed Float
+  usedAt  DateTime @default(now())
+
+  productionOrderId String
+  productionOrder   ProductionOrder @relation(fields: [productionOrderId], references: [id])
+
+  rawLotId   String
+  rawLot     RawMaterialLot @relation(fields: [rawLotId], references: [id])
+
+  materialId String
+  material   Material @relation(fields: [materialId], references: [id])
+}
+
+model FinishedGoodsLot {
+  id                String            @id @default(cuid())
+  lotNumber         String            @unique
+  currentStatus     FinishedLotStatus @default(PRODUCED)
+  quantity          Float
+  unit              String
+  warehouseZone     String?
+  warehousePosition String?
+  producedAt        DateTime          @default(now())
+  expiryDate        DateTime?
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  productionOrderId String
+  productionOrder   ProductionOrder @relation(fields: [productionOrderId], references: [id])
+
+  stages           FinishedLotStage[]
+  qcInspections    QCInspection[]
+  sampleDispatches SampleDispatch[]
+}
+
+model FinishedLotStage {
+  id        String            @id @default(cuid())
+  stage     FinishedLotStatus
+  notes     String?
+  timestamp DateTime          @default(now())
+
+  finishedLotId String
+  finishedLot   FinishedGoodsLot @relation(fields: [finishedLotId], references: [id])
+
+  actorId String
+  actor   User   @relation(fields: [actorId], references: [id])
+}
+
+model SampleDispatch {
+  id                String          @id @default(cuid())
+  dispatchNumber    String          @unique
+  customerName      String
+  customerEmail     String?
+  customerPhone     String?
+  destination       DestinationType
+  country           String?
+  quantity          Float
+  unit              String
+  dispatchDate      DateTime        @default(now())
+  trackingNumber    String?
+  receivedConfirmed Boolean         @default(false)
+  receivedAt        DateTime?
+  notes             String?
+
+  finishedLotId String
+  finishedLot   FinishedGoodsLot @relation(fields: [finishedLotId], references: [id])
+
+  dispatchedById String
+  dispatchedBy   User   @relation(fields: [dispatchedById], references: [id])
+}
