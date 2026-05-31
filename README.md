@@ -287,48 +287,54 @@ npm run dev
 ## 📁 Struktur Project
 
 ```
-.                                  ← Root = Next.js app (frontend)
-├── app/
-│   ├── (auth)/
-│   │   └── login/                 ← Halaman login
-│   ├── (dashboard)/               ← Semua halaman dashboard
-│   │   ├── layout.jsx
-│   │   ├── dashboard/             ← Ringkasan operasi
-│   │   ├── delivery-orders/       ← Penerimaan kiriman (list, new, [id])
-│   │   ├── raw-lots/              ← Raw material tracking (list, new, [id])
-│   │   ├── qc/                    ← QC inspections
-│   │   ├── production/            ← Production orders (list, new, [id])
-│   │   ├── finished-goods/        ← Finished goods (list, [id])
-│   │   ├── dispatch/              ← Sample dispatch (list, new, [id])
-│   │   ├── master/                ← Master data (suppliers, materials, products)
-│   │   └── scan/                  ← QR code scanner (semua role)
-│   └── api/                       ← Next.js API routes → Supabase
-│       ├── auth/                  ← login, me
-│       ├── delivery-orders/       ← CRUD + [id]/receive
-│       ├── raw-lots/              ← CRUD + [id]/status, [id]/qr
-│       ├── qc-inspections/        ← CRUD
-│       ├── production-orders/     ← CRUD + [id]/inputs
-│       ├── finished-lots/         ← CRUD + [id]/status, [id]/warehouse, [id]/qr
-│       ├── sample-dispatches/     ← CRUD + [id]/confirm
-│       ├── materials/             ← Master data
-│       ├── products/              ← Master data
-│       ├── suppliers/             ← Master data
-│       ├── dashboard/summary/     ← Ringkasan dashboard
-│       ├── traceability/          ← Ketertelusuran lot
-│       └── audit-log/             ← Log aktivitas
+.
+├── frontend/                      ← Next.js app (cd frontend && npm run dev)
+│   ├── app/
+│   │   ├── (auth)/
+│   │   │   └── login/             ← Halaman login
+│   │   ├── (dashboard)/           ← Semua halaman dashboard
+│   │   │   ├── layout.jsx
+│   │   │   ├── dashboard/         ← Ringkasan operasi
+│   │   │   ├── delivery-orders/   ← Penerimaan kiriman (list, new, [id])
+│   │   │   ├── raw-lots/          ← Raw material tracking (list, new, [id])
+│   │   │   ├── qc/                ← QC inspections
+│   │   │   ├── production/        ← Production orders (list, new, [id])
+│   │   │   ├── finished-goods/    ← Finished goods (list, [id])
+│   │   │   ├── dispatch/          ← Sample dispatch (list, new, [id])
+│   │   │   ├── master/            ← Master data (suppliers, materials, products)
+│   │   │   └── scan/              ← QR code scanner (semua role)
+│   │   └── api/                   ← Next.js API routes → Supabase
+│   │       ├── auth/              ← login, me
+│   │       ├── delivery-orders/   ← CRUD + [id]/receive
+│   │       ├── raw-lots/          ← CRUD + [id]/status, [id]/qr
+│   │       ├── qc-inspections/    ← CRUD
+│   │       ├── production-orders/ ← CRUD + [id]/inputs
+│   │       ├── finished-lots/     ← CRUD + [id]/status, [id]/warehouse, [id]/qr
+│   │       ├── sample-dispatches/ ← CRUD + [id]/confirm
+│   │       ├── materials/         ← Master data
+│   │       ├── products/          ← Master data
+│   │       ├── suppliers/         ← Master data
+│   │       ├── dashboard/summary/ ← Ringkasan dashboard
+│   │       ├── traceability/      ← Ketertelusuran lot
+│   │       └── audit-log/         ← Log aktivitas
+│   ├── components/
+│   │   ├── layout/                ← Sidebar, Navbar
+│   │   ├── lots/                  ← LotTimeline, QRDisplay
+│   │   └── shared/                ← StatusBadge, StatusSelect
+│   ├── lib/
+│   │   ├── api.js                 ← Axios client
+│   │   ├── auth.js                ← Auth helpers (client)
+│   │   ├── utils.js               ← formatDate, formatNumber, dll
+│   │   └── server/                ← Server-only: db, auth, audit, lotNumber
+│   ├── prisma/
+│   │   ├── schema.prisma          ← Skema database (Supabase)
+│   │   └── seed.js                ← Data awal
+│   ├── package.json
+│   ├── next.config.mjs
+│   ├── tailwind.config.js
+│   └── middleware.js
 │
-├── components/
-│   ├── layout/                    ← Sidebar, Navbar
-│   ├── lots/                      ← LotTimeline, QRDisplay
-│   └── shared/                    ← StatusBadge, StatusSelect
-│
-├── lib/
-│   ├── api.js                     ← Axios client
-│   ├── auth.js                    ← Auth helpers (client)
-│   ├── utils.js                   ← formatDate, formatNumber, dll
-│   └── server/                    ← Server-only: db, auth, audit, lotNumber
-│
-├── backend/                       ← Express.js API (backup/reference)
+├── backend/                       ← Express.js API (cd backend && node src/index.js)
 │   ├── src/
 │   │   ├── controllers/           ← Logika tiap modul
 │   │   ├── routes/                ← Definisi endpoint
@@ -338,10 +344,8 @@ npm run dev
 │       ├── schema.prisma          ← Skema database
 │       └── seed.js                ← Data awal (akun demo, supplier, dll)
 │
-├── package.json                   ← Frontend dependencies
-├── next.config.mjs
-├── tailwind.config.js
-└── amplify.yml                    ← Konfigurasi build AWS Amplify
+├── amplify.yml                    ← Konfigurasi build AWS Amplify
+└── README.md
 ```
 
 ---
