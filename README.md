@@ -88,3 +88,9 @@ Supplier → Delivery Order → Raw Material Lot → QC Inspection
 ## 👥 Tim
 
 **Tim Ini Anggotanya Lapar Smua** — CyberHack 2026
+| Nama | NRP |
+|------|-------|
+| Ahmad Wildan Fawwaz | 5027241001 |
+| Hanif Mawla Faizi | 5027241064 |  |
+| Yasykur Khalis Jati Maulana Yuwono | 5027241112 |
+| M. Faqih Ridho | 5027241123 |
