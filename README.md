@@ -2,13 +2,13 @@
 
 # 🍃 SimaTrack
 
-### dibuat oleh — **Tim Ini Anggotanya Lapar Smua**
+### built by — **Tim Ini Anggotanya Lapar Smua**
 #### 🏆 CyberHack 2026 · ITS Surabaya
 
 <br/>
 
-**Sistem terpadu pelacakan bahan baku & produksi untuk Sima Arome**
-_Produsen ekstrak natural Indonesia — F&B, kosmetik, & wellness._
+**Integrated raw material & production tracking system for Sima Arome**
+_Indonesia's natural extract manufacturer — F&B, cosmetics, & wellness._
 
 <br/>
 
@@ -18,6 +18,7 @@ _Produsen ekstrak natural Indonesia — F&B, kosmetik, & wellness._
 ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 ![AWS Amplify](https://img.shields.io/badge/AWS_Amplify-FF9900?style=for-the-badge&logo=awsamplify&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 **🌐 Live Demo → [main.dse5t6tuz3w2n.amplifyapp.com](https://main.dse5t6tuz3w2n.amplifyapp.com)**
 
@@ -25,284 +26,272 @@ _Produsen ekstrak natural Indonesia — F&B, kosmetik, & wellness._
 
 ---
 
-## 📖 Tentang Project
+## Table of Contents
 
-**SimaTrack** menjawab satu masalah inti di pabrik ekstrak natural: **ketertelusuran (traceability)**.
-
-Setiap kilogram bahan baku yang masuk dari supplier harus bisa dilacak — dari gerbang penerimaan, lolos QC, masuk antrian produksi, diolah menjadi produk jadi, sampai akhirnya sampel dikirim ke customer lokal maupun ekspor. Tanpa sistem, semua ini berjalan lewat **form kertas dan approval WhatsApp** yang mudah hilang dan sulit diaudit.
-
-SimaTrack menggantikan itu dengan satu platform digital:
-
-> **Satu sistem, tanpa batas ketertelusuran** — dari penerimaan bahan baku sampai pengiriman sampel.
-
----
-
-## ✨ Apa yang Bisa Dilakukan
-
-| Modul | Fungsi |
-|-------|--------|
-| 📊 **Dashboard** | Ringkasan real-time seluruh operasi pabrik — jumlah lot aktif, QC pending, aktivitas terbaru. |
-| 📥 **Delivery Order** | Catat penerimaan kiriman bahan baku dari supplier. Setiap item otomatis membuat *Raw Material Lot* berstatus `INCOMING`. |
-| 📦 **Raw Material Lot** | Lacak setiap lot bahan baku — nomor lot internal, qty sisa, tanggal kadaluarsa, riwayat status, dan QR code. |
-| 🔬 **QC Inspection** | Inspeksi mutu (warna, aroma, tekstur, kadar air) untuk bahan baku **dan** produk jadi. Hasil: Approved / Rejected / On Hold. |
-| 🏭 **Production Order** | Kelola antrian & proses produksi — penjadwalan, pemakaian bahan baku, hingga output produk jadi. |
-| 🏬 **Finished Goods** | Lacak produk jadi — zona & posisi gudang, riwayat status, dan QR code. |
-| 🚚 **Sample Dispatch** | Kirim sampel ke customer (lokal & ekspor), lengkap dengan nomor resi & konfirmasi penerimaan. |
-| 🧾 **Master Data** | Kelola data master Supplier, Material, dan Product. |
-| 📱 **QR Code** | Generate & scan QR di tiap lot untuk pelacakan cepat di lapangan. Semua role bisa melihat QR; download & cetak label khusus OPERATOR. |
-| 🔐 **RBAC** | 4 peran dengan hak akses berbeda — tiap orang hanya melihat & mengubah apa yang menjadi tanggung jawabnya. |
+- [Problem Statement](#problem-statement)
+- [Solution Overview](#solution-overview)
+- [Screenshots](#screenshots)
+- [Architecture](#architecture)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Demo Accounts](#demo-accounts)
+- [Deployment](#deployment)
+- [Project Structure](#project-structure)
+- [API Reference](#api-reference)
+- [Role-Based Access Control](#role-based-access-control)
+- [Security](#security)
+- [Team](#team)
 
 ---
 
-## 👤 Peran & Hak Akses (RBAC)
+## Problem Statement
 
-Setiap pengguna punya peran, dan tiap peran mendapat menu serta wewenang yang berbeda.
+Sima Arome, an Indonesian natural extract manufacturer, relies on **paper forms and WhatsApp approvals** to manage its entire supply chain — from raw material intake to sample delivery. This approach creates:
 
-> **Semua role** mendapat akses ke **Dashboard** dan **Scan QR**.
-
-### 🟠 OPERATOR — Gudang
-Menjaga gerbang masuk & keluar barang fisik.
-
-**Menu:** Delivery Orders · Raw Materials · Finished Goods
-
-| Aksi | Wewenang |
-|------|----------|
-| Buat Delivery Order | ✅ |
-| Terima Delivery Order (`INCOMING → RECEIVED`) | ✅ |
-| Update status Raw Material Lot | ✅ |
-| Update status Finished Goods Lot | ✅ |
-| Set lokasi gudang produk jadi | ✅ |
-| **Download & cetak label QR** | ✅ (eksklusif) |
+- **No traceability** — impossible to track which batch of vanilla came from which supplier and went into which product
+- **Audit failures** — paper records are lost, incomplete, or illegible
+- **QC bottlenecks** — inspection results are communicated informally with no permanent record
+- **Production blindspots** — PPIC has no real-time view of material availability or production queue status
 
 ---
 
-### 🟢 QC_STAFF — Quality Control
-Penjaga mutu bahan baku & produk jadi.
+## Solution Overview
 
-**Menu:** QC Inspections · Raw Materials · Finished Goods
+**SimaTrack** is a full-stack manufacturing traceability platform that replaces paper-based processes with a single digital system.
 
-| Aksi | Wewenang |
-|------|----------|
-| Buat QC Inspection (skor warna, aroma, tekstur, kadar air) | ✅ |
-| Putuskan hasil QC (`QC_PENDING → QC_APPROVED / QC_REJECTED`) | ✅ |
-| Update status Raw Material Lot | ✅ |
-| Update status Finished Goods Lot | ✅ |
+> **One system, zero limits on traceability** — from raw material intake to sample dispatch.
+
+Every kilogram of raw material that enters the factory is assigned a **lot number**, tracked through QC, scheduled for production, converted into a finished good, and traced all the way to the customer — with a complete audit trail at every step. Each lot also has a **QR code** that can be scanned on the factory floor for instant status lookup.
 
 ---
 
-### 🔵 PPIC — Production Planning & Inventory Control
-Mengatur jadwal & jalannya produksi.
+## Screenshots
 
-**Menu:** Production Orders · Raw Materials · Finished Goods
+> 🌐 See the full live application at **[main.dse5t6tuz3w2n.amplifyapp.com](https://main.dse5t6tuz3w2n.amplifyapp.com)**
 
-| Aksi | Wewenang |
-|------|----------|
-| Buat & kelola Production Order | ✅ |
-| Majukan status produksi (`QUEUED → SCHEDULED → IN_PROGRESS → COMPLETED`) | ✅ |
-| Update status Raw Material Lot | ✅ |
+Login with any of the [Demo Accounts](#demo-accounts) to explore all features. The Manager account provides full access to every module including Master Data and Sample Dispatch.
 
 ---
 
-### 🟣 MANAGER — Akses Penuh
-Mengawasi seluruh operasi + mengelola data master.
+## Architecture
 
-**Menu:** Semua menu OPERATOR + QC Inspections + Production Orders + Sample Dispatch + Master Data
-
-| Aksi | Wewenang |
-|------|----------|
-| Semua wewenang OPERATOR, QC_STAFF, PPIC | ✅ |
-| Buat Sample Dispatch ke customer | ✅ (eksklusif) |
-| Kelola Master Data (Supplier, Material, Product) | ✅ (eksklusif) |
-
----
-
-> 🔒 **Read-only otomatis:** Pengguna yang tidak berwenang atas suatu status tetap **bisa melihat** data, namun dropdown update dinonaktifkan.
-
----
-
-## 🔄 Alur Data (End-to-End)
+SimaTrack uses a **Next.js-first architecture**. All production API calls go through Next.js Route Handlers (`frontend/app/api/*`), which connect directly to Supabase (PostgreSQL). An Express.js backend in `backend/` exists as a reference implementation.
 
 ```
-                                  ┌──────────────────┐
-   SUPPLIER ──▶ DELIVERY ORDER ──▶│ RAW MATERIAL LOT │──▶ QC INSPECTION
-                                  └──────────────────┘         │
-                                                               ▼
-                                                       ┌───────────────┐
-                                  SAMPLE DISPATCH ◀─────│ PRODUCTION    │
-                                       ▲               │  ORDER        │
-                                       │               └───────────────┘
-                                  ┌────┴───────┐               │
-                                  │ FINISHED   │◀── QC ────────┘
-                                  │ GOODS LOT  │
-                                  └────────────┘
+Browser
+  │
+  ▼
+Next.js 14 (App Router)          ← frontend/
+  ├── app/(dashboard)/*          ← React UI pages
+  ├── app/api/*                  ← API Route Handlers (server-side)
+  │     └── Supabase (PostgreSQL) ← direct DB access via service role key
+  └── middleware.js              ← route protection
+
+Express.js + Prisma              ← backend/  (reference/backup)
+  └── PostgreSQL (same DB)
 ```
 
-### Siklus Status Raw Material Lot
+### Raw Material Lot Status Flow
 ```
 INCOMING → QC_PENDING → QC_APPROVED → IN_QUEUE → IN_PRODUCTION → CONSUMED
-                     └─▶ QC_REJECTED                    (ON_HOLD kapan saja)
+                     └─▶ QC_REJECTED                    (ON_HOLD at any time)
 ```
 
-### Siklus Status Finished Goods Lot
+### Finished Goods Lot Status Flow
 ```
 PRODUCED → QC_PENDING → QC_APPROVED → IN_WAREHOUSE → PARTIALLY_DISPATCHED → FULLY_DISPATCHED
-                     └─▶ QC_REJECTED                       (ON_HOLD kapan saja)
+                     └─▶ QC_REJECTED                       (ON_HOLD at any time)
 ```
 
-### Siklus Status Production Order
+### Production Order Status Flow
 ```
-QUEUED → SCHEDULED → IN_PROGRESS → COMPLETED   (CANCELLED kapan saja)
+QUEUED → SCHEDULED → IN_PROGRESS → COMPLETED   (CANCELLED at any time)
 ```
 
-### Siklus Status Delivery Order
+### Delivery Order Status Flow
 ```
 INCOMING → RECEIVED
 ```
 
 ---
 
-## 🛠 Tech Stack
+## Features
 
-| Layer | Teknologi |
-|-------|-----------|
-| **Frontend** | Next.js 14 (App Router), React, Tailwind CSS, @tanstack/react-query, react-hot-toast |
-| **API Routes** | Next.js Route Handlers (`app/api/*`) → Supabase (snake_case, production path) |
-| **Backend** | Express.js + Prisma ORM (backup/reference, port 3001) |
-| **Database** | PostgreSQL via Supabase |
-| **Auth** | JWT (jsonwebtoken) + bcryptjs |
-| **QR Code** | `qrcode` npm package — PNG 400px, brand colors |
-| **Deploy** | AWS Amplify |
+| Module | Description |
+|--------|-------------|
+| 📊 **Dashboard** | Real-time summary of all factory operations — active lots, QC pending, recent activity. |
+| 📥 **Delivery Orders** | Record incoming shipments from suppliers. Each item automatically creates a Raw Material Lot with `INCOMING` status. |
+| 📦 **Raw Material Lots** | Track every raw material batch — internal lot number, remaining qty, expiry date, status history, and QR code. |
+| 🔬 **QC Inspections** | Quality inspection (color, aroma, texture, moisture) for raw materials and finished goods. Results: Approved / Rejected / On Hold. |
+| 🏭 **Production Orders** | Manage the production queue — scheduling, raw material consumption, and finished goods output. |
+| 🏬 **Finished Goods** | Track finished products in the warehouse — storage zone & position, status history, and QR code. |
+| 🚚 **Sample Dispatch** | Send samples to customers (domestic & export), with tracking number and delivery confirmation. |
+| 🧾 **Master Data** | Manage Supplier, Material, and Product records. |
+| 📱 **QR Code** | Generate & scan QR codes on every lot for fast field tracking. All roles can view QR; download & print label available to OPERATOR and MANAGER only. |
+| 🔐 **RBAC** | 4 roles with distinct access levels — each person only sees and modifies what belongs to their responsibility. |
 
 ---
 
-## 🚀 Menjalankan Secara Lokal
+## Tech Stack
 
-Project terdiri dari **dua folder utama**: `frontend/` (Next.js) dan `backend/` (Express).
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | Next.js 14 (App Router), React, Tailwind CSS, @tanstack/react-query, react-hot-toast |
+| **API Routes** | Next.js Route Handlers (`frontend/app/api/*`) → Supabase (snake_case, production path) |
+| **Backend** | Express.js + Prisma ORM (backup/reference, port 3001) |
+| **Database** | PostgreSQL via Supabase |
+| **Authentication** | JWT (jsonwebtoken) + bcryptjs |
+| **QR Code** | `qrcode` npm package — 400px PNG, brand colors |
+| **Deployment** | AWS Amplify |
+
+---
+
+## Getting Started
+
+The project has two main folders: `frontend/` (Next.js) and `backend/` (Express).
 
 ```bash
-# Clone repository
+# Clone the repository
 git clone https://github.com/MFaqihRidh0/Cyberhack-tim-ini-anggotanya-lapar-smua.git
 cd Cyberhack-tim-ini-anggotanya-lapar-smua
 ```
 
-**1️⃣ Jalankan Frontend (Next.js)**
+**1️⃣ Run Frontend (Next.js)**
 ```bash
 cd frontend
 npm install
-
-# Buat file frontend/.env.local dengan isi:
-# NEXT_PUBLIC_API_URL=/api
-
-npm run dev          # berjalan di http://localhost:3000
+npm run dev          # runs at http://localhost:3000
 ```
 
-**2️⃣ Jalankan Backend** *(opsional — hanya diperlukan jika Next.js API routes tidak tersedia)*
+**2️⃣ Run Backend** *(optional — only needed if Next.js API routes are unavailable)*
 ```bash
 cd backend
 npm install
 npx prisma generate
-node src/index.js    # berjalan di http://localhost:3001
+node src/index.js    # runs at http://localhost:3001
 ```
 
-Buka **http://localhost:3000** 🎉
+Open **http://localhost:3000** 🎉
 
----
+### Troubleshooting
 
-## 🔁 Cara Update Setelah Ada Perubahan Kode
-
-### Kondisi 1 — Perubahan kecil (edit komponen/halaman)
-Next.js Hot Reload biasanya otomatis. Kalau tidak langsung berubah di browser:
-```
-Ctrl + Shift + R       ← hard refresh browser (hapus cache browser)
-```
-
-### Kondisi 2 — Perubahan tidak muncul setelah restart `npm run dev`
-Penyebabnya adalah cache `.next` yang stale. Lakukan langkah berikut:
-
-**Windows (PowerShell):**
+**Changes not appearing after restart:**
 ```powershell
-# 1. Matikan semua proses di port 3000, 3001, 3002, 3003
+# Windows (PowerShell) — kill ports and clear Next.js cache
 @(3000,3001,3002,3003) | ForEach-Object {
   $p = (Get-NetTCPConnection -LocalPort $_ -ErrorAction SilentlyContinue).OwningProcess
-  if ($p) { Stop-Process -Id $p -Force; Write-Host "Killed port $_" }
+  if ($p) { Stop-Process -Id $p -Force }
 }
-
-# 2. Hapus cache .next (di folder frontend)
 Remove-Item -Recurse -Force frontend\.next -ErrorAction SilentlyContinue
-
-# 3. Jalankan ulang frontend
-cd frontend
-npm run dev
+cd frontend && npm run dev
 ```
 
-**macOS / Linux (bash):**
 ```bash
+# macOS / Linux
 rm -rf frontend/.next && cd frontend && npm run dev
 ```
 
-### Kondisi 3 — Perubahan di Backend (Express)
-Backend **tidak** memiliki hot reload otomatis. Setiap ada perubahan di folder `backend/src`:
+**After `git pull` from a teammate:**
 ```powershell
-# Matikan proses di port 3001
-$p = (Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue).OwningProcess
-if ($p) { Stop-Process -Id $p -Force }
-
-# Jalankan ulang backend
-cd backend
-node src/index.js
-```
-
-### Kondisi 4 — Setelah `git pull` dari teammate
-```powershell
-# 1. Pull perubahan
 git pull origin main
-
-# 2. Install dependency baru (jika ada)
 cd frontend; npm install; cd ..
 cd backend; npm install; cd ..
-
-# 3. Hapus cache frontend & restart
 Remove-Item -Recurse -Force frontend\.next -ErrorAction SilentlyContinue
-cd frontend
-npm run dev
+cd frontend; npm run dev
 ```
 
-> ⚠️ **Aturan umum:** Kalau ada yang aneh di UI (layout rusak, halaman blank, error chunk), selalu coba **hapus `.next` dulu** sebelum lapor bug.
+> ⚠️ **General rule:** If the UI looks broken (blank page, layout error, chunk error) — always try **deleting `.next`** before reporting a bug.
 
 ---
 
-## 🔐 Akun Demo
+## Environment Variables
 
-| Peran | Email | Password |
-|-------|-------|----------|
+### Frontend (`frontend/.env.local`)
+
+| Variable | Value | Description |
+|----------|-------|-------------|
+| `NEXT_PUBLIC_API_URL` | `/api` | Base URL for API calls. Use `/api` to route through Next.js handlers (Supabase). Set to `http://localhost:3001/api` only if running against the Express backend. |
+
+> The Supabase URL and service role key are currently embedded as fallbacks in `frontend/lib/server/db.js`. For production, move them to environment variables.
+
+### Backend (`backend/.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string (Supabase) |
+| `JWT_SECRET` | Secret key for signing JWT tokens |
+| `PORT` | Server port (default: 3001) |
+
+---
+
+## Demo Accounts
+
+| Role | Email | Password |
+|------|-------|----------|
 | 🟠 **Operator** | `operator@sima.com` | `SimaArome@2026` |
 | 🟢 **QC Staff** | `qc@sima.com` | `SimaArome@2026` |
 | 🔵 **PPIC** | `ppic@sima.com` | `SimaArome@2026` |
 | 🟣 **Manager** | `manager@sima.com` | `SimaArome@2026` |
 
-> 💡 Login sebagai **Manager** untuk melihat seluruh fitur termasuk Master Data & Sample Dispatch.
+> 💡 Log in as **Manager** to access all features including Master Data and Sample Dispatch.
 
 ---
 
-## 📁 Struktur Project
+## Deployment
+
+SimaTrack is deployed on **AWS Amplify** with automatic CI/CD from the `main` branch.
+
+**Live URL:** [main.dse5t6tuz3w2n.amplifyapp.com](https://main.dse5t6tuz3w2n.amplifyapp.com)
+
+The `amplify.yml` at the project root configures the build:
+
+```yaml
+version: 1
+applications:
+  - frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm install
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**
+          - .next/cache/**
+    appRoot: frontend
+```
+
+Every push to `main` triggers a new Amplify build automatically. The Express backend is not deployed — all production API calls go through Next.js Route Handlers.
+
+---
+
+## Project Structure
 
 ```
 .
 ├── frontend/                      ← Next.js app (cd frontend && npm run dev)
 │   ├── app/
 │   │   ├── (auth)/
-│   │   │   └── login/             ← Halaman login
-│   │   ├── (dashboard)/           ← Semua halaman dashboard
+│   │   │   └── login/             ← Login page
+│   │   ├── (dashboard)/           ← All dashboard pages
 │   │   │   ├── layout.jsx
-│   │   │   ├── dashboard/         ← Ringkasan operasi
-│   │   │   ├── delivery-orders/   ← Penerimaan kiriman (list, new, [id])
+│   │   │   ├── dashboard/         ← Operations summary
+│   │   │   ├── delivery-orders/   ← Shipment intake (list, new, [id])
 │   │   │   ├── raw-lots/          ← Raw material tracking (list, new, [id])
 │   │   │   ├── qc/                ← QC inspections
 │   │   │   ├── production/        ← Production orders (list, new, [id])
 │   │   │   ├── finished-goods/    ← Finished goods (list, [id])
 │   │   │   ├── dispatch/          ← Sample dispatch (list, new, [id])
 │   │   │   ├── master/            ← Master data (suppliers, materials, products)
-│   │   │   └── scan/              ← QR code scanner (semua role)
+│   │   │   └── scan/              ← QR code scanner (all roles)
 │   │   └── api/                   ← Next.js API routes → Supabase
 │   │       ├── auth/              ← login, me
 │   │       ├── delivery-orders/   ← CRUD + [id]/receive
@@ -314,21 +303,21 @@ npm run dev
 │   │       ├── materials/         ← Master data
 │   │       ├── products/          ← Master data
 │   │       ├── suppliers/         ← Master data
-│   │       ├── dashboard/summary/ ← Ringkasan dashboard
-│   │       ├── traceability/      ← Ketertelusuran lot
-│   │       └── audit-log/         ← Log aktivitas
+│   │       ├── dashboard/summary/ ← Dashboard summary
+│   │       ├── traceability/      ← Lot traceability
+│   │       └── audit-log/         ← Activity log
 │   ├── components/
 │   │   ├── layout/                ← Sidebar, Navbar
 │   │   ├── lots/                  ← LotTimeline, QRDisplay
 │   │   └── shared/                ← StatusBadge, StatusSelect
 │   ├── lib/
-│   │   ├── api.js                 ← Axios client
-│   │   ├── auth.js                ← Auth helpers (client)
-│   │   ├── utils.js               ← formatDate, formatNumber, dll
+│   │   ├── api.js                 ← Axios client with JWT interceptor
+│   │   ├── auth.js                ← Client-side auth helpers
+│   │   ├── utils.js               ← formatDate, formatNumber, etc.
 │   │   └── server/                ← Server-only: db, auth, audit, lotNumber
 │   ├── prisma/
-│   │   ├── schema.prisma          ← Skema database (Supabase)
-│   │   └── seed.js                ← Data awal
+│   │   ├── schema.prisma          ← Database schema (Supabase)
+│   │   └── seed.js                ← Seed data
 │   ├── package.json
 │   ├── next.config.mjs
 │   ├── tailwind.config.js
@@ -336,23 +325,162 @@ npm run dev
 │
 ├── backend/                       ← Express.js API (cd backend && node src/index.js)
 │   ├── src/
-│   │   ├── controllers/           ← Logika tiap modul
-│   │   ├── routes/                ← Definisi endpoint
+│   │   ├── controllers/           ← Module logic
+│   │   ├── routes/                ← Endpoint definitions
 │   │   ├── middleware/            ← Auth & RBAC
 │   │   └── utils/                 ← prisma, lotNumber, qrcode
 │   └── prisma/
-│       ├── schema.prisma          ← Skema database
-│       └── seed.js                ← Data awal (akun demo, supplier, dll)
+│       ├── schema.prisma          ← Database schema
+│       └── seed.js                ← Seed data (demo accounts, suppliers, etc.)
 │
-├── amplify.yml                    ← Konfigurasi build AWS Amplify
+├── LICENSE
+├── amplify.yml                    ← AWS Amplify build config
 └── README.md
 ```
 
 ---
 
-## 👥 Tim — Ini Anggotanya Lapar Smua
+## API Reference
 
-| Nama | NRP |
+All API routes are Next.js Route Handlers under `frontend/app/api/`. Authentication is required for all endpoints via `Authorization: Bearer <token>` header.
+
+### Authentication
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/auth/login` | Public | Login with email & password. Returns JWT token. |
+| `GET` | `/api/auth/me` | All | Get current authenticated user. |
+
+### Raw Material Lots
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/raw-lots` | All | List all raw material lots. |
+| `POST` | `/api/raw-lots` | OPERATOR, MANAGER | Create a new raw material lot. |
+| `GET` | `/api/raw-lots/:id` | All | Get lot detail with stages & QC history. |
+| `PATCH` | `/api/raw-lots/:id/status` | All | Update lot status. |
+| `GET` | `/api/raw-lots/:id/qr` | All | Generate QR code image (PNG). |
+
+### Delivery Orders
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/delivery-orders` | All | List all delivery orders. |
+| `POST` | `/api/delivery-orders` | OPERATOR, MANAGER | Create a delivery order (auto-creates raw lots). |
+| `GET` | `/api/delivery-orders/:id` | All | Get delivery order detail. |
+| `PATCH` | `/api/delivery-orders/:id/receive` | OPERATOR, MANAGER | Mark delivery as received. |
+
+### Finished Goods Lots
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/finished-lots` | All | List all finished goods lots. |
+| `GET` | `/api/finished-lots/:id` | All | Get lot detail. |
+| `PATCH` | `/api/finished-lots/:id/status` | OPERATOR, QC_STAFF, MANAGER | Update lot status. |
+| `PATCH` | `/api/finished-lots/:id/warehouse` | OPERATOR, MANAGER | Set warehouse zone & position. |
+| `GET` | `/api/finished-lots/:id/qr` | All | Generate QR code image (PNG). |
+
+### QC Inspections
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/qc-inspections` | All | List all QC inspections. |
+| `POST` | `/api/qc-inspections` | QC_STAFF, MANAGER | Submit a QC inspection result. |
+
+### Production Orders
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/production-orders` | All | List all production orders. |
+| `POST` | `/api/production-orders` | PPIC, MANAGER | Create a production order. |
+| `GET` | `/api/production-orders/:id` | All | Get production order detail. |
+| `PATCH` | `/api/production-orders/:id` | PPIC, MANAGER | Update production order status. |
+
+### Sample Dispatches
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/sample-dispatches` | All | List all sample dispatches. |
+| `POST` | `/api/sample-dispatches` | MANAGER | Create a sample dispatch. |
+| `PATCH` | `/api/sample-dispatches/:id/confirm` | All | Confirm delivery received by customer. |
+
+### Master Data
+
+| Method | Endpoint | Role | Description |
+|--------|----------|------|-------------|
+| `GET/POST` | `/api/materials` | GET: All · POST: MANAGER | List or create materials. |
+| `GET/POST` | `/api/products` | GET: All · POST: MANAGER | List or create products. |
+| `GET/POST` | `/api/suppliers` | GET: All · POST: MANAGER | List or create suppliers. |
+
+---
+
+## Role-Based Access Control
+
+Every user has one role, and each role gets a specific set of menus and permissions.
+
+> **All roles** have access to **Dashboard** and **Scan QR**.
+
+### 🟠 OPERATOR — Warehouse
+
+**Menu:** Delivery Orders · Raw Materials · Finished Goods
+
+| Action | Access |
+|--------|--------|
+| Create & receive Delivery Orders | ✅ |
+| Update Raw Material Lot status | ✅ |
+| Update Finished Goods Lot status | ✅ |
+| Set warehouse location for finished goods | ✅ |
+| **Download & print QR label** | ✅ |
+
+### 🟢 QC_STAFF — Quality Control
+
+**Menu:** QC Inspections · Raw Materials · Finished Goods
+
+| Action | Access |
+|--------|--------|
+| Submit QC inspections (color, aroma, texture, moisture) | ✅ |
+| Approve or reject lots (`QC_PENDING → QC_APPROVED / QC_REJECTED`) | ✅ |
+| Update Raw Material Lot status | ✅ |
+| Update Finished Goods Lot status | ✅ |
+
+### 🔵 PPIC — Production Planning & Inventory Control
+
+**Menu:** Production Orders · Raw Materials · Finished Goods
+
+| Action | Access |
+|--------|--------|
+| Create & manage Production Orders | ✅ |
+| Advance production status (`QUEUED → SCHEDULED → IN_PROGRESS → COMPLETED`) | ✅ |
+| Update Raw Material Lot status | ✅ |
+
+### 🟣 MANAGER — Full Access
+
+**Menu:** All menus from above + Sample Dispatch + Master Data
+
+| Action | Access |
+|--------|--------|
+| All OPERATOR, QC_STAFF, and PPIC actions | ✅ |
+| **Download & print QR label** | ✅ |
+| Create Sample Dispatches to customers | ✅ (exclusive) |
+| Manage Master Data (Suppliers, Materials, Products) | ✅ (exclusive) |
+
+> 🔒 **Read-only by default:** Users without update permission can still **view** all statuses, but the update dropdown is disabled.
+
+---
+
+## Security
+
+- **Authentication:** All API routes require a valid JWT token passed via `Authorization: Bearer <token>` header. Tokens expire after 8 hours.
+- **Password hashing:** User passwords are hashed with `bcryptjs` before storage. Plain-text passwords are never persisted.
+- **Role enforcement:** Every write endpoint checks the user's role server-side using `checkRole()`. Frontend UI restrictions are secondary — the API is the source of truth.
+- **Row-Level Security:** Supabase RLS is enabled on all tables via migrations.
+- **Environment secrets:** The Supabase service role key and JWT secret are kept out of version control via `.gitignore` (`.env*.local`, `backend/.env`).
+
+---
+
+## Team
+
+| Name | NRP |
 |------|-----|
 | Ahmad Wildan Fawwaz | 5027241001 |
 | Hanif Mawla Faizi | 5027241064 |
@@ -363,6 +491,6 @@ npm run dev
 
 <br/>
 
-**Dibuat dengan 🍃 untuk CyberHack 2026 · ITS Surabaya**
+**Built with 🍃 for CyberHack 2026 · ITS Surabaya**
 
 </div>

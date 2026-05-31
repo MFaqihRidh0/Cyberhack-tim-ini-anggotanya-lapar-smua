@@ -12,12 +12,12 @@ import { Download, Printer } from 'lucide-react';
  *  - lotNumber        : nomor lot (ditampilkan + nama file)
  *  - lotType          : 'raw-lots' | 'finished-goods' (segmen endpoint API)
  *  - materialOrProduct: nama material (raw) atau produk (finished) — tampil di label print
- *  - isOperator       : true jika role OPERATOR → tombol Download & Print muncul
+ *  - canPrintDownload  : true jika role OPERATOR atau MANAGER → tombol Download & Print muncul
  *
- * QR image tampil untuk SEMUA role; Download/Print hanya OPERATOR.
+ * QR image tampil untuk SEMUA role; Download/Print hanya OPERATOR & MANAGER.
  */
-export default function QRDisplay({ lotId, lotNumber, lotType, materialOrProduct, isOperator, canDownload }) {
-  const showActions = isOperator || canDownload;
+export default function QRDisplay({ lotId, lotNumber, lotType, materialOrProduct, canPrintDownload }) {
+  const showActions = canPrintDownload;
   const [qrUrl, setQrUrl] = useState(null);
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function QRDisplay({ lotId, lotNumber, lotType, materialOrProduct
           </button>
         </div>
       ) : (
-        <p className="qr-operator-only">Download &amp; print tersedia untuk OPERATOR</p>
+        <p className="qr-operator-only">Download &amp; print tersedia untuk OPERATOR &amp; MANAGER</p>
       )}
     </div>
   );

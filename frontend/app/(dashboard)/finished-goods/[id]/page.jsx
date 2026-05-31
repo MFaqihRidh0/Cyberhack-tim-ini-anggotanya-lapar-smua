@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { formatDate, formatNumber } from '@/lib/utils';
+import { formatNumber } from '@/lib/utils';
 import { getUser } from '@/lib/auth';
 import StatusBadge from '@/components/shared/StatusBadge';
 import LotTimeline from '@/components/lots/LotTimeline';
@@ -123,7 +123,7 @@ export default function FinishedGoodDetailPage() {
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col items-center">
           <h3 className="font-semibold text-slate-700 mb-4">QR Code</h3>
-          <QRDisplay lotId={lot.id} lotType="finished-lots" lotNumber={lot.lot_number} canDownload={['OPERATOR', 'MANAGER'].includes(user?.role)} />
+          <QRDisplay lotId={lot.id} lotType="finished-lots" lotNumber={lot.lot_number} canPrintDownload={['OPERATOR', 'MANAGER'].includes(user?.role)} />
         </div>
       </div>
 
