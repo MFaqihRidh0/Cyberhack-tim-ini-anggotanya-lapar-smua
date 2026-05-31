@@ -20,7 +20,7 @@ export async function POST(request) {
     return Response.json({ success: false, data: null, message: 'name dan code wajib diisi' }, { status: 400 });
   }
 
-  const { data, error } = await supabase.from('suppliers').insert({ name, code, contact_name, phone, email, address }).select().single();
+  const { data, error } = await supabase.from('suppliers').insert({ name, code, contact_name, phone, email, address, is_active: true }).select().single();
   if (error) return Response.json({ success: false, data: null, message: error.message }, { status: 400 });
   return Response.json({ success: true, data, message: 'Supplier berhasil dibuat' }, { status: 201 });
 }
