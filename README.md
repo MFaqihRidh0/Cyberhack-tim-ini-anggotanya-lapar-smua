@@ -41,47 +41,82 @@ SimaTrack menggantikan itu dengan satu platform digital:
 
 | Modul | Fungsi |
 |-------|--------|
-| 📥 **Delivery Order** | Catat penerimaan kiriman bahan baku dari supplier. Setiap item otomatis membuat *Raw Material Lot*. |
-| 📦 **Raw Material Lot** | Lacak setiap lot bahan baku — nomor lot internal, qty, kadaluarsa, dan riwayat statusnya. |
+| 📊 **Dashboard** | Ringkasan real-time seluruh operasi pabrik — jumlah lot aktif, QC pending, aktivitas terbaru. |
+| 📥 **Delivery Order** | Catat penerimaan kiriman bahan baku dari supplier. Setiap item otomatis membuat *Raw Material Lot* berstatus `INCOMING`. |
+| 📦 **Raw Material Lot** | Lacak setiap lot bahan baku — nomor lot internal, qty sisa, tanggal kadaluarsa, riwayat status, dan QR code. |
 | 🔬 **QC Inspection** | Inspeksi mutu (warna, aroma, tekstur, kadar air) untuk bahan baku **dan** produk jadi. Hasil: Approved / Rejected / On Hold. |
-| 🏭 **Production Order** | Kelola antrian & proses produksi — dari penjadwalan, pemakaian bahan baku, hingga output produk jadi. |
-| 🏬 **Finished Goods** | Lacak produk jadi di gudang, beserta zona & posisi penyimpanan. |
+| 🏭 **Production Order** | Kelola antrian & proses produksi — penjadwalan, pemakaian bahan baku, hingga output produk jadi. |
+| 🏬 **Finished Goods** | Lacak produk jadi — zona & posisi gudang, riwayat status, dan QR code. |
 | 🚚 **Sample Dispatch** | Kirim sampel ke customer (lokal & ekspor), lengkap dengan nomor resi & konfirmasi penerimaan. |
 | 🧾 **Master Data** | Kelola data master Supplier, Material, dan Product. |
-| 📱 **QR Code** | Generate & scan QR di tiap lot untuk pelacakan cepat di lapangan. |
-| 📊 **Dashboard** | Ringkasan real-time seluruh operasi pabrik. |
+| 📱 **QR Code** | Generate & scan QR di tiap lot untuk pelacakan cepat di lapangan. Semua role bisa melihat QR; download & cetak label khusus OPERATOR. |
 | 🔐 **RBAC** | 4 peran dengan hak akses berbeda — tiap orang hanya melihat & mengubah apa yang menjadi tanggung jawabnya. |
 
 ---
 
 ## 👤 Peran & Hak Akses (RBAC)
 
-Setiap pengguna punya peran, dan tiap peran punya menu serta wewenang ubah status yang berbeda.
+Setiap pengguna punya peran, dan tiap peran mendapat menu serta wewenang yang berbeda.
+
+> **Semua role** mendapat akses ke **Dashboard** dan **Scan QR**.
 
 ### 🟠 OPERATOR — Gudang
 Menjaga gerbang masuk & keluar barang fisik.
-- Mencatat **Delivery Order** & menerima **Raw Material Lot**
-- Mengirim lot ke QC (`Incoming → QC Pending`)
-- Memindahkan produk jadi ke gudang (`QC Approved → In Warehouse`) & set lokasi rak
+
+**Menu:** Delivery Orders · Raw Materials · Finished Goods
+
+| Aksi | Wewenang |
+|------|----------|
+| Buat Delivery Order | ✅ |
+| Terima Delivery Order (`INCOMING → RECEIVED`) | ✅ |
+| Update status Raw Material Lot | ✅ |
+| Update status Finished Goods Lot | ✅ |
+| Set lokasi gudang produk jadi | ✅ |
+| **Download & cetak label QR** | ✅ (eksklusif) |
+
+---
 
 ### 🟢 QC_STAFF — Quality Control
 Penjaga mutu bahan baku & produk jadi.
-- Melakukan **QC Inspection** (skor warna, aroma, tekstur, kadar air)
-- Memutuskan hasil: `QC Pending → QC Approved / QC Rejected`
+
+**Menu:** QC Inspections · Raw Materials · Finished Goods
+
+| Aksi | Wewenang |
+|------|----------|
+| Buat QC Inspection (skor warna, aroma, tekstur, kadar air) | ✅ |
+| Putuskan hasil QC (`QC_PENDING → QC_APPROVED / QC_REJECTED`) | ✅ |
+| Update status Raw Material Lot | ✅ |
+| Update status Finished Goods Lot | ✅ |
+
+---
 
 ### 🔵 PPIC — Production Planning & Inventory Control
 Mengatur jadwal & jalannya produksi.
-- Membuat & mengelola **Production Order**
-- Memajukan lot ke produksi (`QC Approved → In Queue → In Production → Consumed`)
-- Menjalankan status produksi (`Queued → Scheduled → In Progress → Completed`)
+
+**Menu:** Production Orders · Raw Materials · Finished Goods
+
+| Aksi | Wewenang |
+|------|----------|
+| Buat & kelola Production Order | ✅ |
+| Majukan status produksi (`QUEUED → SCHEDULED → IN_PROGRESS → COMPLETED`) | ✅ |
+| Update status Raw Material Lot | ✅ |
+
+---
 
 ### 🟣 MANAGER — Akses Penuh
 Mengawasi seluruh operasi + mengelola data master.
-- **Semua** wewenang di atas
-- Mengelola **Master Data** (Supplier, Material, Product)
-- Melakukan **Sample Dispatch** ke customer
 
-> 🔒 **Read-only otomatis:** Pengguna yang tidak berwenang atas suatu status tetap **bisa melihat** statusnya, namun dropdown update dinonaktifkan.
+**Menu:** Semua menu OPERATOR + QC Inspections + Production Orders + Sample Dispatch + Master Data
+
+| Aksi | Wewenang |
+|------|----------|
+| Semua wewenang OPERATOR, QC_STAFF, PPIC | ✅ |
+| Buat Sample Dispatch ke customer | ✅ (eksklusif) |
+| Kelola Master Data (Supplier, Material, Product) | ✅ (eksklusif) |
+
+---
+
+> 🔒 **Read-only otomatis:** Pengguna yang tidak berwenang atas suatu status tetap **bisa melihat** data, namun dropdown update dinonaktifkan.
 
 ---
 
@@ -94,7 +129,7 @@ Mengawasi seluruh operasi + mengelola data master.
                                                                ▼
                                                        ┌───────────────┐
                                   SAMPLE DISPATCH ◀─────│ PRODUCTION    │
-                                       ▲               │  ORDER         │
+                                       ▲               │  ORDER        │
                                        │               └───────────────┘
                                   ┌────┴───────┐               │
                                   │ FINISHED   │◀── QC ────────┘
@@ -119,23 +154,30 @@ PRODUCED → QC_PENDING → QC_APPROVED → IN_WAREHOUSE → PARTIALLY_DISPATCHE
 QUEUED → SCHEDULED → IN_PROGRESS → COMPLETED   (CANCELLED kapan saja)
 ```
 
+### Siklus Status Delivery Order
+```
+INCOMING → RECEIVED
+```
+
 ---
 
 ## 🛠 Tech Stack
 
 | Layer | Teknologi |
 |-------|-----------|
-| **Frontend** | Next.js 14 (App Router), React, Tailwind CSS, React Query, react-hot-toast |
-| **Backend** | Express.js + Prisma ORM |
-| **Database** | PostgreSQL (Supabase) |
+| **Frontend** | Next.js 14 (App Router), React, Tailwind CSS, @tanstack/react-query, react-hot-toast |
+| **API Routes** | Next.js Route Handlers (`app/api/*`) → Supabase (snake_case, production path) |
+| **Backend** | Express.js + Prisma ORM (backup/reference, port 3001) |
+| **Database** | PostgreSQL via Supabase |
 | **Auth** | JWT (jsonwebtoken) + bcryptjs |
+| **QR Code** | `qrcode` npm package — PNG 400px, brand colors |
 | **Deploy** | AWS Amplify |
 
 ---
 
 ## 🚀 Menjalankan Secara Lokal
 
-Project terdiri dari **dua bagian**: `backend` (Express, port 3001) dan `frontend` (Next.js, port 3000).
+Project ini adalah **Next.js monorepo** — frontend ada di root direktori. Ada juga folder `backend/` (Express) yang digunakan sebagai referensi/backup.
 
 ```bash
 # Clone repository
@@ -143,20 +185,22 @@ git clone https://github.com/MFaqihRidh0/Cyberhack-tim-ini-anggotanya-lapar-smua
 cd Cyberhack-tim-ini-anggotanya-lapar-smua
 ```
 
-**1️⃣ Jalankan Backend**
+**1️⃣ Jalankan Frontend (Next.js — di root)**
+```bash
+npm install
+
+# Buat file .env.local di root dengan isi:
+# NEXT_PUBLIC_API_URL=/api
+
+npm run dev          # berjalan di http://localhost:3000
+```
+
+**2️⃣ Jalankan Backend** *(opsional — hanya diperlukan jika Next.js API routes tidak tersedia)*
 ```bash
 cd backend
 npm install
 npx prisma generate
-npm run dev          # berjalan di http://localhost:3001
-```
-
-**2️⃣ Jalankan Frontend** (terminal baru)
-```bash
-cd frontend
-npm install
-# buat .env.local berisi:  NEXT_PUBLIC_API_URL=http://localhost:3001/api
-npm run dev          # berjalan di http://localhost:3000
+node src/index.js    # berjalan di http://localhost:3001
 ```
 
 Buka **http://localhost:3000** 🎉
@@ -176,14 +220,13 @@ Penyebabnya adalah cache `.next` yang stale. Lakukan langkah berikut:
 
 **Windows (PowerShell):**
 ```powershell
-# 1. Matikan semua proses di port 3000, 3001, 3002
-@(3000,3002,3003) | ForEach-Object {
+# 1. Matikan semua proses di port 3000, 3001, 3002, 3003
+@(3000,3001,3002,3003) | ForEach-Object {
   $p = (Get-NetTCPConnection -LocalPort $_ -ErrorAction SilentlyContinue).OwningProcess
   if ($p) { Stop-Process -Id $p -Force; Write-Host "Killed port $_" }
 }
 
-# 2. Hapus cache .next (di folder frontend)
-cd frontend
+# 2. Hapus cache .next (di root project)
 Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
 
 # 3. Jalankan ulang frontend
@@ -192,8 +235,6 @@ npm run dev
 
 **macOS / Linux (bash):**
 ```bash
-# Hapus cache dan restart
-cd frontend
 rm -rf .next && npm run dev
 ```
 
@@ -204,7 +245,7 @@ Backend **tidak** memiliki hot reload otomatis. Setiap ada perubahan di folder `
 $p = (Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue).OwningProcess
 if ($p) { Stop-Process -Id $p -Force }
 
-# Jalankan ulang backend (di folder backend)
+# Jalankan ulang backend
 cd backend
 node src/index.js
 ```
@@ -215,8 +256,8 @@ node src/index.js
 git pull origin main
 
 # 2. Install dependency baru (jika ada)
-cd backend && npm install
-cd ../frontend && npm install    # atau: cd .. && cd frontend && npm install
+npm install
+cd backend; npm install; cd ..
 
 # 3. Hapus cache frontend & restart
 Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
@@ -243,30 +284,61 @@ npm run dev
 ## 📁 Struktur Project
 
 ```
-.
-├── frontend/                  ← Next.js App (UI)
-│   ├── app/
-│   │   ├── (auth)/            ← Halaman login
-│   │   └── (dashboard)/       ← Semua halaman dashboard
-│   │       ├── master/        ← Master Data (suppliers, materials, products)
-│   │       ├── raw-lots/      ← Raw material tracking
-│   │       ├── qc/            ← QC inspections
-│   │       ├── production/    ← Production orders
-│   │       ├── finished-goods/← Finished goods
-│   │       └── dispatch/      ← Sample dispatch
-│   ├── components/            ← Komponen React (Sidebar, Navbar, QR, dll)
-│   └── lib/                   ← Utilities, API client, auth
+.                                  ← Root = Next.js app (frontend)
+├── app/
+│   ├── (auth)/
+│   │   └── login/                 ← Halaman login
+│   ├── (dashboard)/               ← Semua halaman dashboard
+│   │   ├── layout.jsx
+│   │   ├── dashboard/             ← Ringkasan operasi
+│   │   ├── delivery-orders/       ← Penerimaan kiriman (list, new, [id])
+│   │   ├── raw-lots/              ← Raw material tracking (list, new, [id])
+│   │   ├── qc/                    ← QC inspections
+│   │   ├── production/            ← Production orders (list, new, [id])
+│   │   ├── finished-goods/        ← Finished goods (list, [id])
+│   │   ├── dispatch/              ← Sample dispatch (list, new, [id])
+│   │   ├── master/                ← Master data (suppliers, materials, products)
+│   │   └── scan/                  ← QR code scanner (semua role)
+│   └── api/                       ← Next.js API routes → Supabase
+│       ├── auth/                  ← login, me
+│       ├── delivery-orders/       ← CRUD + [id]/receive
+│       ├── raw-lots/              ← CRUD + [id]/status, [id]/qr
+│       ├── qc-inspections/        ← CRUD
+│       ├── production-orders/     ← CRUD + [id]/inputs
+│       ├── finished-lots/         ← CRUD + [id]/status, [id]/warehouse, [id]/qr
+│       ├── sample-dispatches/     ← CRUD + [id]/confirm
+│       ├── materials/             ← Master data
+│       ├── products/              ← Master data
+│       ├── suppliers/             ← Master data
+│       ├── dashboard/summary/     ← Ringkasan dashboard
+│       ├── traceability/          ← Ketertelusuran lot
+│       └── audit-log/             ← Log aktivitas
 │
-├── backend/                   ← Express.js API
+├── components/
+│   ├── layout/                    ← Sidebar, Navbar
+│   ├── lots/                      ← LotTimeline, QRDisplay
+│   └── shared/                    ← StatusBadge, StatusSelect
+│
+├── lib/
+│   ├── api.js                     ← Axios client
+│   ├── auth.js                    ← Auth helpers (client)
+│   ├── utils.js                   ← formatDate, formatNumber, dll
+│   └── server/                    ← Server-only: db, auth, audit, lotNumber
+│
+├── backend/                       ← Express.js API (backup/reference)
 │   ├── src/
-│   │   ├── controllers/       ← Logika tiap modul
-│   │   ├── routes/            ← Definisi endpoint
-│   │   └── middleware/        ← Auth & RBAC
+│   │   ├── controllers/           ← Logika tiap modul
+│   │   ├── routes/                ← Definisi endpoint
+│   │   ├── middleware/            ← Auth & RBAC
+│   │   └── utils/                 ← prisma, lotNumber, qrcode
 │   └── prisma/
-│       ├── schema.prisma      ← Skema database
-│       └── seed.js            ← Data awal (akun demo, supplier, dll)
+│       ├── schema.prisma          ← Skema database
+│       └── seed.js                ← Data awal (akun demo, supplier, dll)
 │
-└── amplify.yml                ← Konfigurasi build AWS Amplify
+├── package.json                   ← Frontend dependencies
+├── next.config.mjs
+├── tailwind.config.js
+└── amplify.yml                    ← Konfigurasi build AWS Amplify
 ```
 
 ---
