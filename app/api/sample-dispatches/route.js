@@ -40,6 +40,7 @@ export async function POST(request) {
     destination, country: destination === 'EXPORT' ? country : null,
     quantity: Number(quantity), unit: unit || 'kg',
     tracking_number: trackingNumber || tracking_number || null, notes, dispatched_by_id: user.id,
+    dispatch_date: new Date().toISOString(),
   }).select().single();
 
   if (error) return Response.json({ success: false, data: null, message: error.message }, { status: 400 });

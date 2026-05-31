@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { formatDate } from '@/lib/utils';
+import { formatDateTime } from '@/lib/utils';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -55,9 +55,11 @@ export default function DispatchPage() {
                 <td className="px-4 py-3 text-slate-600">{d.customer_name}</td>
                 <td className="px-4 py-3 text-slate-600">{d.finished_lot?.lot_number}</td>
                 <td className="px-4 py-3 text-slate-600">{d.destination}{d.country ? ` (${d.country})` : ''}</td>
-                <td className="px-4 py-3 text-slate-600">{formatDate(d.dispatch_date)}</td>
+                <td className="px-4 py-3 text-slate-600">{formatDateTime(d.dispatch_date)}</td>
                 <td className="px-4 py-3">
-                  {d.received_confirmed ? <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Confirmed</span> : <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">Pending</span>}
+                  {d.received_confirmed
+                    ? <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Confirmed {formatDateTime(d.received_at)}</span>
+                    : <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">Pending since {formatDateTime(d.dispatch_date)}</span>}
                 </td>
                 <td className="px-4 py-3">
                   {!d.received_confirmed && <button onClick={() => handleConfirm(d.id)} className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg">Confirm</button>}
