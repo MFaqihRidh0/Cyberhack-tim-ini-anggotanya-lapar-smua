@@ -177,7 +177,7 @@ INCOMING → RECEIVED
 
 ## 🚀 Menjalankan Secara Lokal
 
-Project ini adalah **Next.js monorepo** — frontend ada di root direktori. Ada juga folder `backend/` (Express) yang digunakan sebagai referensi/backup.
+Project terdiri dari **dua folder utama**: `frontend/` (Next.js) dan `backend/` (Express).
 
 ```bash
 # Clone repository
@@ -185,11 +185,12 @@ git clone https://github.com/MFaqihRidh0/Cyberhack-tim-ini-anggotanya-lapar-smua
 cd Cyberhack-tim-ini-anggotanya-lapar-smua
 ```
 
-**1️⃣ Jalankan Frontend (Next.js — di root)**
+**1️⃣ Jalankan Frontend (Next.js)**
 ```bash
+cd frontend
 npm install
 
-# Buat file .env.local di root dengan isi:
+# Buat file frontend/.env.local dengan isi:
 # NEXT_PUBLIC_API_URL=/api
 
 npm run dev          # berjalan di http://localhost:3000
@@ -226,16 +227,17 @@ Penyebabnya adalah cache `.next` yang stale. Lakukan langkah berikut:
   if ($p) { Stop-Process -Id $p -Force; Write-Host "Killed port $_" }
 }
 
-# 2. Hapus cache .next (di root project)
-Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+# 2. Hapus cache .next (di folder frontend)
+Remove-Item -Recurse -Force frontend\.next -ErrorAction SilentlyContinue
 
 # 3. Jalankan ulang frontend
+cd frontend
 npm run dev
 ```
 
 **macOS / Linux (bash):**
 ```bash
-rm -rf .next && npm run dev
+rm -rf frontend/.next && cd frontend && npm run dev
 ```
 
 ### Kondisi 3 — Perubahan di Backend (Express)
@@ -256,11 +258,12 @@ node src/index.js
 git pull origin main
 
 # 2. Install dependency baru (jika ada)
-npm install
+cd frontend; npm install; cd ..
 cd backend; npm install; cd ..
 
 # 3. Hapus cache frontend & restart
-Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force frontend\.next -ErrorAction SilentlyContinue
+cd frontend
 npm run dev
 ```
 
