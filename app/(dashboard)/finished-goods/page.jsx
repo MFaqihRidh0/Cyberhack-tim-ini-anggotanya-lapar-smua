@@ -15,6 +15,9 @@ export default function FinishedGoodsPage() {
   const [status, setStatus] = useState('');
   const user = getUser();
   const queryClient = useQueryClient();
+  const [warehouseModal, setWarehouseModal] = useState(null);
+  const [zone, setZone] = useState('');
+  const [position, setPosition] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['finished-lots', status],
@@ -24,11 +27,38 @@ export default function FinishedGoodsPage() {
   async function handleSendToQC(lotId) {
     try {
       await api.patch(`/finished-lots/${lotId}/status`, { status: 'QC_PENDING', notes: 'Sent to QC for inspection' });
-      toast.success('Finished lot sent to QC');
+      toast.success('Sent to QC');
       queryClient.invalidateQueries(['finished-lots']);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed');
     }
+  }
+
+  async function handleMoveToWarehouse(e) {
+    e.preventDefault();
+    if (!zone || !position) { toast.error('Zone and Position required'); return; }
+    try {
+      await api.patch(`/finished-lots/${warehouseModal}/warehouse`, { warehouseZone: zone, warehousePosition: position });
+      toast.success('Moved to warehouse');
+      setWarehouseModal(null);
+      setZone('');
+      setPosition('');
+      queryClient.invalidateQueries(['finished-lots']);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed');
+    }
+  }
+
+  function getAction(lot) {
+    // PPIC/Manager: Send PRODUCED → QC
+    if (lot.current_status === 'PRODUCED' && ['PPIC', 'MANAGER'].includes(user?.role)) {
+      return <button onClick={() => handleSendToQC(lot.id)} className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg font-medium">Send to QC</button>;
+    }
+    // Operator: Move QC_APPROVED → IN_WAREHOUSE
+    if (lot.current_status === 'QC_APPROVED' && ['OPERATOR', 'MANAGER'].includes(user?.role)) {
+      return <button onClick={() => setWarehouseModal(lot.id)} className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg font-medium">Move to Warehouse</button>;
+    }
+    return null;
   }
 
   return (
@@ -42,6 +72,29 @@ export default function FinishedGoodsPage() {
           </button>
         ))}
       </div>
+
+      {/* Warehouse Modal */}
+      {warehouseModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold mb-4">Set Warehouse Location</h3>
+            <form onSubmit={handleMoveToWarehouse} className="space-y-3">
+              <div>
+                <label className="text-sm text-slate-600">Zone</label>
+                <input type="text" value={zone} onChange={(e) => setZone(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="e.g. A1, B2" />
+              </div>
+              <div>
+                <label className="text-sm text-slate-600">Position</label>
+                <input type="text" value={position} onChange={(e) => setPosition(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="e.g. Rack-01, Shelf-3" />
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="flex-1 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium">Confirm</button>
+                <button type="button" onClick={() => { setWarehouseModal(null); setZone(''); setPosition(''); }} className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-medium">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
@@ -64,13 +117,7 @@ export default function FinishedGoodsPage() {
                 <td className="px-4 py-3 text-slate-600">{formatNumber(lot.quantity)} {lot.unit}</td>
                 <td className="px-4 py-3 text-slate-600">{lot.warehouse_zone ? `${lot.warehouse_zone} / ${lot.warehouse_position}` : '-'}</td>
                 <td className="px-4 py-3"><StatusBadge status={lot.current_status} /></td>
-                <td className="px-4 py-3">
-                  {lot.current_status === 'PRODUCED' && ['PPIC', 'MANAGER'].includes(user?.role) && (
-                    <button onClick={() => handleSendToQC(lot.id)} className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg font-medium">
-                      Send to QC
-                    </button>
-                  )}
-                </td>
+                <td className="px-4 py-3">{getAction(lot)}</td>
               </tr>
             ))}
             {data?.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">No data</td></tr>}

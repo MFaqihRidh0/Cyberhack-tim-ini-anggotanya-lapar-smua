@@ -31,7 +31,8 @@ export async function POST(request) {
   if (!lot) return Response.json({ success: false, data: null, message: 'Finished Lot tidak ditemukan' }, { status: 404 });
 
   const dispatch_number = await generateLotNumber('SD');
-  const newStatus = Number(quantity) >= lot.quantity ? 'FULLY_DISPATCHED' : 'PARTIALLY_DISPATCHED';
+  // When dispatched but pending confirmation → PARTIALLY_DISPATCHED
+  const newStatus = 'PARTIALLY_DISPATCHED';
 
   const { data: dispatch, error } = await supabase.from('sample_dispatches').insert({
     dispatch_number, finished_lot_id: finishedLotId, customer_name: custName,
