@@ -5,15 +5,32 @@ import { useParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatDate, formatNumber } from '@/lib/utils';
+import { getUser } from '@/lib/auth';
 import StatusBadge from '@/components/shared/StatusBadge';
 import toast from 'react-hot-toast';
+
+const NEXT_STATUS = {
+  QUEUED:      ['SCHEDULED', 'CANCELLED'],
+  SCHEDULED:   ['IN_PROGRESS', 'CANCELLED'],
+  IN_PROGRESS: ['COMPLETED', 'CANCELLED'],
+};
+
+const STATUS_LABELS = {
+  SCHEDULED:   'Scheduled',
+  IN_PROGRESS: 'In Progress',
+  COMPLETED:   'Completed',
+  CANCELLED:   'Cancelled',
+};
 
 export default function ProductionDetailPage() {
   const { id } = useParams();
   const queryClient = useQueryClient();
+  const user = getUser();
   const [addingInput, setAddingInput] = useState(false);
   const [inputForm, setInputForm] = useState({ rawLotId: '', qtyUsed: '' });
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [actualQty, setActualQty] = useState('');
+  const [updating, setUpdating] = useState(false);
 
   const { data: po, isLoading } = useQuery({
     queryKey: ['production-order', id],
@@ -45,23 +62,29 @@ export default function ProductionDetailPage() {
     }
   }
 
-  async function handleUpdateStatus(newStatus) {
+  async function handleUpdateStatus() {
+    if (!selectedStatus) { toast.error('Please select a status'); return; }
+    if (selectedStatus === 'COMPLETED' && !actualQty) { toast.error('Actual Qty is required to complete'); return; }
+    setUpdating(true);
     try {
-      const body = { status: newStatus };
-      if (newStatus === 'COMPLETED') {
-        if (!actualQty) { toast.error('Actual Qty is required to complete'); return; }
-        body.actualQty = Number(actualQty);
-      }
+      const body = { status: selectedStatus };
+      if (selectedStatus === 'COMPLETED') body.actualQty = Number(actualQty);
       await api.patch(`/production-orders/${id}`, body);
-      toast.success(`Status updated to ${newStatus}`);
+      toast.success(`Status updated to ${STATUS_LABELS[selectedStatus] || selectedStatus}`);
+      setSelectedStatus('');
       queryClient.invalidateQueries(['production-order', id]);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update status');
+    } finally {
+      setUpdating(false);
     }
   }
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div></div>;
   if (!po) return <p className="text-slate-500">Production Order not found</p>;
+
+  const canUpdateStatus = ['PPIC', 'MANAGER'].includes(user?.role) && NEXT_STATUS[po.status];
+  const options = NEXT_STATUS[po.status] || [];
 
   return (
     <div className="space-y-6">
@@ -73,22 +96,49 @@ export default function ProductionDetailPage() {
         <StatusBadge status={po.status} />
       </div>
 
-      <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3 flex-wrap">
-        {po.status === 'QUEUED' && <button onClick={() => handleUpdateStatus('SCHEDULED')} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg">→ SCHEDULED</button>}
-        {po.status === 'SCHEDULED' && <button onClick={() => handleUpdateStatus('IN_PROGRESS')} className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg">→ IN PROGRESS</button>}
-        {po.status === 'IN_PROGRESS' && (
-          <div className="flex items-center gap-2">
-            <input type="number" step="0.01" placeholder="Actual Qty" value={actualQty} onChange={(e) => setActualQty(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg w-32" />
-            <button onClick={() => handleUpdateStatus('COMPLETED')} className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg">→ COMPLETED</button>
+      {canUpdateStatus && (
+        <div style={{ backgroundColor: '#fff', border: '1px solid #ECEAE3', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 180 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 }}>Update Status</label>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: '#FAFAF8', outline: 'none', fontFamily: 'inherit' }}
+            >
+              <option value="">— Select next status —</option>
+              {options.map((s) => <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>)}
+            </select>
           </div>
-        )}
-        {po.actual_qty && <span className="text-sm text-slate-600">Actual: {formatNumber(po.actual_qty)} {po.product?.unit}</span>}
-      </div>
+          {selectedStatus === 'COMPLETED' && (
+            <div style={{ flex: 1, minWidth: 160 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 }}>Actual Qty *</label>
+              <input
+                type="number" step="0.01" placeholder={`e.g. ${po.target_qty}`}
+                value={actualQty} onChange={(e) => setActualQty(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: '#FAFAF8', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+              />
+            </div>
+          )}
+          <button
+            onClick={handleUpdateStatus}
+            disabled={!selectedStatus || updating}
+            style={{ padding: '10px 22px', borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#FFBC45)', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: selectedStatus ? 'pointer' : 'not-allowed', opacity: (!selectedStatus || updating) ? 0.5 : 1, whiteSpace: 'nowrap' }}
+          >
+            {updating ? 'Saving...' : 'Apply'}
+          </button>
+        </div>
+      )}
+
+      {po.actual_qty && (
+        <div className="bg-white p-3 rounded-xl border border-slate-200 text-sm text-slate-600">
+          Actual Output: <strong>{formatNumber(po.actual_qty)} {po.product?.unit}</strong>
+        </div>
+      )}
 
       <div className="bg-white p-6 rounded-xl border border-slate-200">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-slate-700">Raw Materials Used</h3>
-          {['QUEUED', 'SCHEDULED', 'IN_PROGRESS'].includes(po.status) && (
+          {['QUEUED', 'SCHEDULED', 'IN_PROGRESS'].includes(po.status) && ['PPIC', 'MANAGER'].includes(user?.role) && (
             <button onClick={() => setAddingInput(true)} className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg">+ Add</button>
           )}
         </div>

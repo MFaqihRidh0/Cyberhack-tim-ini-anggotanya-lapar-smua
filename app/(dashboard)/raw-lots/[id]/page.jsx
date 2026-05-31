@@ -10,23 +10,42 @@ import LotTimeline from '@/components/lots/LotTimeline';
 import QRDisplay from '@/components/lots/QRDisplay';
 import toast from 'react-hot-toast';
 
+const NEXT_STATUS_RAW = {
+  OPERATOR: { INCOMING: ['QC_PENDING'] },
+  QC_STAFF:  { QC_PENDING: ['QC_APPROVED', 'QC_REJECTED'] },
+  PPIC:      { QC_APPROVED: ['IN_QUEUE'], IN_QUEUE: ['IN_PRODUCTION'], IN_PRODUCTION: ['CONSUMED'] },
+  MANAGER:   { INCOMING: ['QC_PENDING'], QC_PENDING: ['QC_APPROVED', 'QC_REJECTED'], QC_APPROVED: ['IN_QUEUE'], IN_QUEUE: ['IN_PRODUCTION'], IN_PRODUCTION: ['CONSUMED'] },
+};
+
+const STATUS_LABELS_RAW = {
+  QC_PENDING: 'QC Pending', QC_APPROVED: 'QC Approved', QC_REJECTED: 'QC Rejected',
+  IN_QUEUE: 'In Queue', IN_PRODUCTION: 'In Production', CONSUMED: 'Consumed',
+};
+
 export default function RawLotDetailPage() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const user = getUser();
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [updating, setUpdating] = useState(false);
 
   const { data: lot, isLoading } = useQuery({
     queryKey: ['raw-lot', id],
     queryFn: () => api.get(`/raw-lots/${id}`).then((r) => r.data.data),
   });
 
-  async function handleStatusUpdate(newStatus) {
+  async function handleStatusUpdate() {
+    if (!selectedStatus) { toast.error('Please select a status'); return; }
+    setUpdating(true);
     try {
-      await api.patch(`/raw-lots/${id}/status`, { status: newStatus, notes: `Status updated to ${newStatus}` });
-      toast.success(`Status updated to ${newStatus}`);
+      await api.patch(`/raw-lots/${id}/status`, { status: selectedStatus });
+      toast.success(`Status updated to ${STATUS_LABELS_RAW[selectedStatus] || selectedStatus}`);
+      setSelectedStatus('');
       queryClient.invalidateQueries(['raw-lot', id]);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to update status');
+    } finally {
+      setUpdating(false);
     }
   }
 
@@ -46,15 +65,33 @@ export default function RawLotDetailPage() {
         <StatusBadge status={lot.current_status} />
       </div>
 
-      {/* Status Action Buttons */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3 flex-wrap">
-        {lot.current_status === 'INCOMING' && ['OPERATOR', 'MANAGER'].includes(user?.role) && (
-          <button onClick={() => handleStatusUpdate('QC_PENDING')} className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm rounded-lg">→ Send to QC</button>
-        )}
-        {lot.current_status === 'QC_APPROVED' && ['PPIC', 'MANAGER'].includes(user?.role) && (
-          <button onClick={() => handleStatusUpdate('IN_QUEUE')} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg">→ Queue for Production</button>
-        )}
-      </div>
+      {/* Status Dropdown */}
+      {(() => {
+        const options = NEXT_STATUS_RAW[user?.role]?.[lot.current_status] || [];
+        if (options.length === 0) return null;
+        return (
+          <div style={{ backgroundColor: '#fff', border: '1px solid #ECEAE3', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 }}>Update Status</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: '#FAFAF8', outline: 'none', fontFamily: 'inherit' }}
+              >
+                <option value="">— Select next status —</option>
+                {options.map((s) => <option key={s} value={s}>{STATUS_LABELS_RAW[s] || s}</option>)}
+              </select>
+            </div>
+            <button
+              onClick={handleStatusUpdate}
+              disabled={!selectedStatus || updating}
+              style={{ padding: '10px 22px', borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#FFBC45)', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: selectedStatus ? 'pointer' : 'not-allowed', opacity: (!selectedStatus || updating) ? 0.5 : 1, whiteSpace: 'nowrap' }}
+            >
+              {updating ? 'Saving...' : 'Apply'}
+            </button>
+          </div>
+        );
+      })()}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200">

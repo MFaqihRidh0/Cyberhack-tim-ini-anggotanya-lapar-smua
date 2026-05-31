@@ -11,11 +11,23 @@ import LotTimeline from '@/components/lots/LotTimeline';
 import QRDisplay from '@/components/lots/QRDisplay';
 import toast from 'react-hot-toast';
 
+const NEXT_STATUS_FG = {
+  OPERATOR: { PRODUCED: ['QC_PENDING'], QC_APPROVED: ['IN_WAREHOUSE'] },
+  QC_STAFF:  { QC_PENDING: ['QC_APPROVED', 'QC_REJECTED'] },
+  MANAGER:   { PRODUCED: ['QC_PENDING'], QC_PENDING: ['QC_APPROVED', 'QC_REJECTED'], QC_APPROVED: ['IN_WAREHOUSE'] },
+};
+
+const STATUS_LABELS_FG = {
+  QC_PENDING: 'QC Pending', QC_APPROVED: 'QC Approved', QC_REJECTED: 'QC Rejected', IN_WAREHOUSE: 'In Warehouse',
+};
+
 export default function FinishedGoodDetailPage() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const user = getUser();
   const [warehouseForm, setWarehouseForm] = useState({ zone: '', position: '' });
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [updating, setUpdating] = useState(false);
 
   const { data: lot, isLoading } = useQuery({
     queryKey: ['finished-lot', id],
@@ -47,7 +59,46 @@ export default function FinishedGoodDetailPage() {
         <StatusBadge status={lot.current_status} />
       </div>
 
-      {['OPERATOR', 'MANAGER'].includes(user?.role) && ['PRODUCED', 'QC_APPROVED'].includes(lot.current_status) && (
+      {/* Status Dropdown */}
+      {(() => {
+        const options = NEXT_STATUS_FG[user?.role]?.[lot.current_status] || [];
+        if (options.length === 0) return null;
+        return (
+          <div style={{ backgroundColor: '#fff', border: '1px solid #ECEAE3', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 }}>Update Status</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: '#FAFAF8', outline: 'none', fontFamily: 'inherit' }}
+              >
+                <option value="">— Select next status —</option>
+                {options.map((s) => <option key={s} value={s}>{STATUS_LABELS_FG[s] || s}</option>)}
+              </select>
+            </div>
+            <button
+              onClick={async () => {
+                if (!selectedStatus) { toast.error('Please select a status'); return; }
+                setUpdating(true);
+                try {
+                  await api.patch(`/finished-lots/${id}/status`, { status: selectedStatus });
+                  toast.success(`Status updated to ${STATUS_LABELS_FG[selectedStatus] || selectedStatus}`);
+                  setSelectedStatus('');
+                  queryClient.invalidateQueries(['finished-lot', id]);
+                } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
+                finally { setUpdating(false); }
+              }}
+              disabled={!selectedStatus || updating}
+              style={{ padding: '10px 22px', borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#FFBC45)', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: selectedStatus ? 'pointer' : 'not-allowed', opacity: (!selectedStatus || updating) ? 0.5 : 1, whiteSpace: 'nowrap' }}
+            >
+              {updating ? 'Saving...' : 'Apply'}
+            </button>
+          </div>
+        );
+      })()}
+
+      {/* Warehouse Location Form */}
+      {['OPERATOR', 'MANAGER'].includes(user?.role) && ['PRODUCED', 'QC_APPROVED', 'IN_WAREHOUSE'].includes(lot.current_status) && (
         <form onSubmit={handleWarehouse} className="bg-white p-4 rounded-xl border border-slate-200 flex items-end gap-3">
           <div className="flex-1">
             <label className="text-sm text-slate-600">Zone</label>
