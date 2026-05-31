@@ -31,6 +31,16 @@ export default function RawLotsPage() {
     }
   }
 
+  async function handleSendToPPIC(lotId) {
+    try {
+      await api.patch(`/raw-lots/${lotId}/status`, { status: 'IN_QUEUE', notes: 'Sent to PPIC production queue' });
+      toast.success('Lot sent to PPIC queue');
+      queryClient.invalidateQueries(['raw-lots']);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update status');
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -55,7 +65,7 @@ export default function RawLotsPage() {
               <th className="text-left px-4 py-3 font-medium text-slate-600">Qty</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Expiry</th>
-              {user?.role === 'OPERATOR' && <th className="text-left px-4 py-3 font-medium text-slate-600">Action</th>}
+              {(user?.role === 'OPERATOR' || user?.role === 'QC_STAFF' || user?.role === 'MANAGER') && <th className="text-left px-4 py-3 font-medium text-slate-600">Action</th>}
             </tr>
           </thead>
           <tbody>
@@ -70,11 +80,16 @@ export default function RawLotsPage() {
                 <td className="px-4 py-3 text-slate-600">{formatNumber(lot.initial_qty)} {lot.material?.unit}</td>
                 <td className="px-4 py-3"><StatusBadge status={lot.current_status} /></td>
                 <td className="px-4 py-3 text-slate-600">{formatDate(lot.expiry_date)}</td>
-                {user?.role === 'OPERATOR' && (
+                {(user?.role === 'OPERATOR' || user?.role === 'QC_STAFF' || user?.role === 'MANAGER') && (
                   <td className="px-4 py-3">
-                    {lot.current_status === 'RECEIVED' && (
+                    {lot.current_status === 'RECEIVED' && (user?.role === 'OPERATOR' || user?.role === 'MANAGER') && (
                       <button onClick={() => handleSendToQC(lot.id)} className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg font-medium">
                         Send to QC
+                      </button>
+                    )}
+                    {lot.current_status === 'QC_APPROVED' && (user?.role === 'QC_STAFF' || user?.role === 'MANAGER') && (
+                      <button onClick={() => handleSendToPPIC(lot.id)} className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg font-medium">
+                        Send to PPIC
                       </button>
                     )}
                   </td>
