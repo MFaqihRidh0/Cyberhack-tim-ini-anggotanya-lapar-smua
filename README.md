@@ -30,7 +30,6 @@ _Indonesia's natural extract manufacturer — F&B, cosmetics, & wellness._
 
 - [Problem Statement](#problem-statement)
 - [Solution Overview](#solution-overview)
-- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
