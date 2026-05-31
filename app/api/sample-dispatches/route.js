@@ -31,8 +31,12 @@ export async function POST(request) {
   if (!lot) return Response.json({ success: false, data: null, message: 'Finished Lot tidak ditemukan' }, { status: 404 });
 
   const dispatch_number = await generateLotNumber('SD');
-  // When dispatched but pending confirmation → PARTIALLY_DISPATCHED
-  const newStatus = 'PARTIALLY_DISPATCHED';
+
+  // Check total already dispatched for this lot
+  const { data: existingDispatches } = await supabase.from('sample_dispatches').select('quantity').eq('finished_lot_id', finishedLotId);
+  const totalDispatched = (existingDispatches || []).reduce((s, d) => s + d.quantity, 0) + Number(quantity);
+  // If total dispatched >= lot quantity → FULLY, otherwise → PARTIALLY
+  const newStatus = totalDispatched >= lot.quantity ? 'FULLY_DISPATCHED' : 'PARTIALLY_DISPATCHED';
 
   const { data: dispatch, error } = await supabase.from('sample_dispatches').insert({
     dispatch_number, finished_lot_id: finishedLotId, customer_name: custName,

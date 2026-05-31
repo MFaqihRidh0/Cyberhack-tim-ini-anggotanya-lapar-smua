@@ -16,7 +16,8 @@ import { Download, Printer } from 'lucide-react';
  *
  * QR image tampil untuk SEMUA role; Download/Print hanya OPERATOR.
  */
-export default function QRDisplay({ lotId, lotNumber, lotType, materialOrProduct, isOperator }) {
+export default function QRDisplay({ lotId, lotNumber, lotType, materialOrProduct, isOperator, canDownload }) {
+  const showActions = isOperator || canDownload;
   const [qrUrl, setQrUrl] = useState(null);
 
   useEffect(() => {
@@ -97,7 +98,7 @@ export default function QRDisplay({ lotId, lotNumber, lotType, materialOrProduct
         <span className="qr-lot-number">{lotNumber}</span>
       </div>
 
-      {isOperator ? (
+      {showActions ? (
         <div className="qr-actions">
           <button
             onClick={handleDownload}

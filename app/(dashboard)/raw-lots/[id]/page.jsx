@@ -87,7 +87,7 @@ export default function RawLotDetailPage() {
         </div>
         <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col items-center">
           <h3 className="font-semibold text-slate-700 mb-4">QR Code</h3>
-          <QRDisplay lotId={lot.id} lotType="raw" lotNumber={lot.internal_lot_no} />
+          <QRDisplay lotId={lot.id} lotType="raw-lots" lotNumber={lot.internal_lot_no} canDownload={['OPERATOR', 'MANAGER'].includes(user?.role)} />
         </div>
       </div>
 
