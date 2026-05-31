@@ -40,7 +40,7 @@ export default function DeliveryOrdersPage() {
             <tr>
               <th className="text-left px-4 py-3 font-medium text-slate-600">No. DO</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Supplier</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">Date & Time</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Order Date & Time</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Action</th>
             </tr>
