@@ -1,20 +1,32 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatDateTime, formatNumber } from '@/lib/utils';
 import StatusBadge from '@/components/shared/StatusBadge';
 import Link from 'next/link';
 import { ArrowLeft, Truck, Building2, Package, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function DeliveryOrderDetailPage() {
   const { id } = useParams();
+  const queryClient = useQueryClient();
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['delivery-order', id],
     queryFn: () => api.get(`/delivery-orders/${id}`).then((r) => r.data.data),
   });
+
+  async function handleReceive() {
+    try {
+      const res = await api.patch(`/delivery-orders/${id}/receive`);
+      toast.success(res.data.message);
+      queryClient.invalidateQueries(['delivery-order', id]);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to receive');
+    }
+  }
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div></div>;
   if (!order) return <p className="text-slate-500">Delivery Order not found</p>;
@@ -32,9 +44,22 @@ export default function DeliveryOrderDetailPage() {
           <p className="text-slate-500 mt-1">Delivery Order</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
-          <Truck className="h-4 w-4" /> Received
+          <Truck className="h-4 w-4" /> {order.status || 'INCOMING'}
         </div>
       </div>
+
+      {/* Receive Action */}
+      {order.status !== 'RECEIVED' && (
+        <div className="bg-white p-5 rounded-xl border border-slate-200 flex items-center justify-between">
+          <div>
+            <p className="font-medium text-slate-700">Confirm Receipt</p>
+            <p className="text-sm text-slate-500">Mark this DO as received — raw material lots will be created automatically</p>
+          </div>
+          <button onClick={handleReceive} className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg">
+            ✓ Receive DO
+          </button>
+        </div>
+      )}
 
       {/* Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

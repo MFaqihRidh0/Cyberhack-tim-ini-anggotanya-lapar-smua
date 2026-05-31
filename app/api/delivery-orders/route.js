@@ -8,15 +8,6 @@ export async function GET(request) {
   if (!user) return unauthorized();
 
   const { data } = await supabase.from('delivery_orders').select('*, supplier:suppliers(*)').order('received_date', { ascending: false });
-
-  // For each DO, get count of raw lots
-  if (data) {
-    for (const d of data) {
-      const { data: lots } = await supabase.from('raw_material_lots').select('id').eq('delivery_order_id', d.id);
-      d.raw_lot_count = lots?.length || 0;
-    }
-  }
-
   return Response.json({ success: true, data: data || [], message: 'Berhasil' });
 }
 
@@ -27,7 +18,7 @@ export async function POST(request) {
 
   const body = await request.json();
   const supplierId = body.supplier_id || body.supplierId;
-  const items = body.items || []; // Array of { materialId, qty, supplierLotNo?, expiryDate? }
+  const items = body.items || [];
   const notes = body.notes || null;
 
   if (!supplierId) {
@@ -40,55 +31,30 @@ export async function POST(request) {
   // Auto-generate DO number
   const doNumber = await generateLotNumber('DO');
 
-  // Create the delivery order
+  // Create the delivery order with status INCOMING (lots NOT created yet)
   const { data: order, error } = await supabase.from('delivery_orders')
-    .insert({ do_number: doNumber, supplier_id: supplierId, notes })
+    .insert({ do_number: doNumber, supplier_id: supplierId, notes, status: 'INCOMING' })
     .select('*, supplier:suppliers(*)')
     .single();
 
   if (error) return Response.json({ success: false, data: null, message: error.message }, { status: 400 });
 
-  // Auto-create Raw Material Lots for each item
-  const createdLots = [];
-  for (const item of items) {
-    const materialId = item.materialId || item.material_id;
-    const qty = Number(item.qty || item.initialQty || item.initial_qty);
-
-    if (!materialId || !qty) continue;
-
-    const lotNo = await generateLotNumber('SA-RM');
-
-    const { data: lot } = await supabase.from('raw_material_lots').insert({
-      internal_lot_no: lotNo,
-      supplier_lot_no: item.supplierLotNo || item.supplier_lot_no || null,
-      initial_qty: qty,
-      current_status: 'INCOMING',
-      delivery_order_id: order.id,
-      supplier_id: supplierId,
-      material_id: materialId,
-      created_by_id: user.id,
-      expiry_date: item.expiryDate || item.expiry_date || null,
-      notes: item.notes || null,
-    }).select('*, material:materials(name, unit)').single();
-
-    if (lot) {
-      await supabase.from('raw_lot_stages').insert({
-        raw_lot_id: lot.id, stage: 'INCOMING', actor_id: user.id, notes: `Diterima via ${doNumber}`,
-      });
-      createdLots.push(lot);
-    }
-  }
+  // Store items as JSON metadata in notes or a separate field
+  // For now, store items temporarily in a delivery_order_items approach
+  // We'll save items info in the DO notes as structured data for later use
+  const itemsJson = JSON.stringify(items);
+  await supabase.from('delivery_orders').update({ notes: notes ? `${notes}\n---ITEMS---\n${itemsJson}` : `---ITEMS---\n${itemsJson}` }).eq('id', order.id);
 
   await logAudit({
     action: 'CREATE', entityType: 'DELIVERY_ORDER', entityId: order.id,
-    description: `${doNumber} — ${items.length} item dari ${order.supplier?.name}`,
-    metadata: { do_number: doNumber, items_count: items.length, lots_created: createdLots.length },
+    description: `${doNumber} — ${items.length} item dari ${order.supplier?.name} (INCOMING)`,
+    metadata: { do_number: doNumber, items_count: items.length, status: 'INCOMING' },
     user,
   });
 
   return Response.json({
     success: true,
-    data: { ...order, rawLots: createdLots },
-    message: `Delivery Order ${doNumber} berhasil dibuat dengan ${createdLots.length} lot`,
+    data: { ...order, items },
+    message: `Delivery Order ${doNumber} dibuat (status: INCOMING). Klik "Receive" untuk menambahkan ke Raw Material Lots.`,
   }, { status: 201 });
 }
