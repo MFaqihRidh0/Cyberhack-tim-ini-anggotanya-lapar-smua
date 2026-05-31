@@ -1,6 +1,6 @@
 const prisma = require('../utils/prisma');
 const { generateLotNumber } = require('../utils/lotNumber');
-const QRCode = require('qrcode');
+const { generateQRBuffer } = require('../utils/qrcode');
 
 // Transisi status yang valid (state machine)
 const VALID_TRANSITIONS = {
@@ -252,23 +252,25 @@ async function generateQR(req, res, next) {
   try {
     const lot = await prisma.rawMaterialLot.findUnique({
       where: { id: req.params.id },
-      include: { material: { select: { name: true } } },
+      include: { material: true, supplier: true },
     });
 
     if (!lot) {
       return res.status(404).json({ success: false, data: null, message: 'Raw Material Lot tidak ditemukan' });
     }
 
-    const qrData = JSON.stringify({
+    const buffer = await generateQRBuffer({
       type: 'RAW_LOT',
       id: lot.id,
       lotNumber: lot.internalLotNo,
-      material: lot.material.name,
+      material: lot.material?.name,
+      supplier: lot.supplier?.name,
+      qty: lot.initialQty,
+      unit: lot.material?.unit,
       status: lot.currentStatus,
     });
-
-    const buffer = await QRCode.toBuffer(qrData, { type: 'png', width: 300, margin: 2 });
     res.set('Content-Type', 'image/png');
+    res.set('Content-Disposition', `inline; filename="QR-${lot.internalLotNo}.png"`);
     res.send(buffer);
   } catch (err) {
     next(err);

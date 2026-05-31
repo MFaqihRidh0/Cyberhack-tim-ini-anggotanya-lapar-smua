@@ -198,3 +198,60 @@ html.leaf-cursor-active * {
   .font-display  { font-family: 'DM Serif Display', serif; }
   .font-mono-code { font-family: 'JetBrains Mono', monospace; }
 }
+
+/* ── QR Code section (lot detail pages) ── */
+.qr-section {
+  background: white;
+  border: 1px solid #ECEAE3;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+}
+
+.qr-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #3D3B36;
+  margin-bottom: 6px;
+}
+
+.qr-image-wrap {
+  background: #FAFAF8;
+  border: 2px dashed #D6D3C8;
+  border-radius: 10px;
+  padding: 16px;
+  margin: 14px 0;
+}
+
+.qr-image-wrap img {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.qr-lot-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: #3D3B36;
+  background: #F5F4F0;
+  padding: 5px 11px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 14px;
+}
+
+.qr-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.qr-operator-only {
+  font-size: 11px;
+  color: #A8A49A;
+  margin-top: 10px;
+  font-style: italic;
+}

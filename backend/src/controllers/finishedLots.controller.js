@@ -1,5 +1,5 @@
 const prisma = require('../utils/prisma');
-const QRCode = require('qrcode');
+const { generateQRBuffer } = require('../utils/qrcode');
 
 async function list(req, res, next) {
   try {
@@ -125,16 +125,17 @@ async function generateQR(req, res, next) {
       return res.status(404).json({ success: false, data: null, message: 'Finished Goods Lot tidak ditemukan' });
     }
 
-    const qrData = JSON.stringify({
+    const buffer = await generateQRBuffer({
       type: 'FINISHED_LOT',
       id: lot.id,
       lotNumber: lot.lotNumber,
-      product: lot.product.name,
+      product: lot.product?.name,
+      qty: lot.quantity,
+      unit: lot.unit,
       status: lot.currentStatus,
     });
-
-    const buffer = await QRCode.toBuffer(qrData, { type: 'png', width: 300, margin: 2 });
     res.set('Content-Type', 'image/png');
+    res.set('Content-Disposition', `inline; filename="QR-${lot.lotNumber}.png"`);
     res.send(buffer);
   } catch (err) {
     next(err);
