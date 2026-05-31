@@ -3,7 +3,8 @@ import { verifyAuth, unauthorized, forbidden } from '@/lib/server/auth';
 import { logAudit } from '@/lib/server/audit';
 
 const VALID_TRANSITIONS = {
-  INCOMING: ['QC_PENDING', 'ON_HOLD'],
+  INCOMING: ['RECEIVED', 'QC_PENDING', 'ON_HOLD'],
+  RECEIVED: ['QC_PENDING', 'ON_HOLD'],
   QC_PENDING: ['QC_APPROVED', 'QC_REJECTED', 'ON_HOLD'],
   QC_APPROVED: ['IN_QUEUE', 'IN_PRODUCTION', 'ON_HOLD'],
   QC_REJECTED: ['ON_HOLD'],

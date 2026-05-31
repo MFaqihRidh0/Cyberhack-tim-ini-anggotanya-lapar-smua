@@ -53,7 +53,7 @@ export default function RawLotDetailPage() {
       </div>
 
       {/* Operator action: Send to QC */}
-      {user?.role === 'OPERATOR' && lot.current_status === 'INCOMING' && (
+      {user?.role === 'OPERATOR' && lot.current_status === 'RECEIVED' && (
         <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between">
           <div>
             <p className="font-medium text-slate-700">Send to Quality Control</p>

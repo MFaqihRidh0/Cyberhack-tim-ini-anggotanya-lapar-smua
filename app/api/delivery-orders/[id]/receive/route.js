@@ -44,7 +44,7 @@ export async function PATCH(request, { params }) {
       internal_lot_no: lotNo,
       supplier_lot_no: item.supplierLotNo || item.supplier_lot_no || null,
       initial_qty: qty,
-      current_status: 'INCOMING',
+      current_status: 'RECEIVED',
       delivery_order_id: order.id,
       supplier_id: order.supplier_id,
       material_id: materialId,
@@ -54,7 +54,7 @@ export async function PATCH(request, { params }) {
 
     if (lot) {
       await supabase.from('raw_lot_stages').insert({
-        raw_lot_id: lot.id, stage: 'INCOMING', actor_id: user.id, notes: `Received via ${order.do_number}`,
+        raw_lot_id: lot.id, stage: 'RECEIVED', actor_id: user.id, notes: `Received via ${order.do_number}`,
       });
       createdLots.push(lot);
     }

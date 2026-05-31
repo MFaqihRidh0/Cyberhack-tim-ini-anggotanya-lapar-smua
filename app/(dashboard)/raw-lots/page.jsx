@@ -9,7 +9,7 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-const STATUSES = ['', 'INCOMING', 'QC_PENDING', 'QC_APPROVED', 'QC_REJECTED', 'IN_QUEUE', 'IN_PRODUCTION', 'CONSUMED', 'ON_HOLD'];
+const STATUSES = ['', 'RECEIVED', 'QC_PENDING', 'QC_APPROVED', 'QC_REJECTED', 'IN_QUEUE', 'IN_PRODUCTION', 'CONSUMED', 'ON_HOLD'];
 
 export default function RawLotsPage() {
   const [status, setStatus] = useState('');
@@ -72,7 +72,7 @@ export default function RawLotsPage() {
                 <td className="px-4 py-3 text-slate-600">{formatDate(lot.expiry_date)}</td>
                 {user?.role === 'OPERATOR' && (
                   <td className="px-4 py-3">
-                    {lot.current_status === 'INCOMING' && (
+                    {lot.current_status === 'RECEIVED' && (
                       <button onClick={() => handleSendToQC(lot.id)} className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg font-medium">
                         Send to QC
                       </button>
