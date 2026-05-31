@@ -67,14 +67,6 @@ Every kilogram of raw material that enters the factory is assigned a **lot numbe
 
 ---
 
-## Screenshots
-
-> 🌐 See the full live application at **[main.dse5t6tuz3w2n.amplifyapp.com](https://main.dse5t6tuz3w2n.amplifyapp.com)**
-
-Login with any of the [Demo Accounts](#demo-accounts) to explore all features. The Manager account provides full access to every module including Master Data and Sample Dispatch.
-
----
-
 ## Architecture
 
 SimaTrack uses a **Next.js-first architecture**. All production API calls go through Next.js Route Handlers (`frontend/app/api/*`), which connect directly to Supabase (PostgreSQL). An Express.js backend in `backend/` exists as a reference implementation.
