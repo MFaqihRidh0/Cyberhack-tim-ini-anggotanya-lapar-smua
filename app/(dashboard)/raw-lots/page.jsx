@@ -9,7 +9,7 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-const STATUSES = ['', 'RECEIVED', 'QC_PENDING', 'QC_APPROVED', 'QC_REJECTED', 'IN_QUEUE', 'IN_PRODUCTION', 'CONSUMED', 'ON_HOLD'];
+const STATUSES = ['', 'INCOMING', 'RECEIVED', 'QC_PENDING', 'QC_APPROVED', 'QC_REJECTED', 'IN_QUEUE', 'IN_PRODUCTION', 'CONSUMED', 'ON_HOLD'];
 
 export default function RawLotsPage() {
   const [status, setStatus] = useState('');
