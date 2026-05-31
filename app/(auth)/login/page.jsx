@@ -12,13 +12,6 @@ const FEATURES = [
   { Icon: Settings, title: 'Automated PPIC Queue', desc: 'Real-time production scheduling with priority' },
 ];
 
-const ACCOUNTS = [
-  { role: 'operator', pill: 'OPR', cred: 'operator@sima.com / password123' },
-  { role: 'qc', pill: 'QC', cred: 'qc@sima.com / password123' },
-  { role: 'ppic', pill: 'PPIC', cred: 'ppic@sima.com / password123' },
-  { role: 'manager', pill: 'MGR', cred: 'manager@sima.com / password123' },
-];
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -141,21 +134,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="divider">
-              <span>test accounts</span>
-            </div>
 
-            <div className="test-accounts">
-              <p>Test Accounts</p>
-              <ul>
-                {ACCOUNTS.map(({ role, pill, cred }) => (
-                  <li key={role}>
-                    <span className={`role-pill ${role}`}>{pill}</span>
-                    {cred}
-                  </li>
-                ))}
-              </ul>
-            </div>
           </div>
         </div>
       </div>
@@ -493,83 +472,6 @@ export default function LoginPage() {
         .btn-login:disabled {
           opacity: 0.65;
           cursor: not-allowed;
-        }
-
-        .divider {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin: 20px 0;
-        }
-        .divider::before,
-        .divider::after {
-          content: '';
-          flex: 1;
-          height: 1px;
-          background: #eceae3;
-        }
-        .divider span {
-          font-size: 12px;
-          color: #b0ada6;
-          white-space: nowrap;
-          font-weight: 500;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-        }
-
-        .test-accounts {
-          background: #fafaf8;
-          border: 1px dashed #d6d3c8;
-          border-radius: 10px;
-          padding: 12px 14px;
-        }
-        .test-accounts > p {
-          font-size: 11px;
-          font-weight: 600;
-          color: #a8a49a;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          margin-bottom: 10px;
-        }
-        .test-accounts ul {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-        }
-        .test-accounts li {
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 12.5px;
-          color: #7d7a72;
-          padding: 4px 0;
-          display: flex;
-          align-items: center;
-          gap: 9px;
-        }
-
-        .role-pill {
-          font-size: 10px;
-          padding: 2px 7px;
-          border-radius: 5px;
-          font-family: 'DM Sans', sans-serif;
-          font-weight: 700;
-          letter-spacing: 0.04em;
-          flex-shrink: 0;
-        }
-        .role-pill.operator {
-          background: #fff8ed;
-          color: #9a3f07;
-        }
-        .role-pill.qc {
-          background: #ecfdf5;
-          color: #065f46;
-        }
-        .role-pill.ppic {
-          background: #eff6ff;
-          color: #1e40af;
-        }
-        .role-pill.manager {
-          background: #f5f3ff;
-          color: #4c1d95;
         }
 
         /* ── Keyframes motion ── */

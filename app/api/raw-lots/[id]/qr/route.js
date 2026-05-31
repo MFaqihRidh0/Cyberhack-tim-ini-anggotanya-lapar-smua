@@ -1,10 +1,11 @@
 import supabase from '@/lib/server/db';
-import { verifyAuth, unauthorized } from '@/lib/server/auth';
+import { verifyAuth, unauthorized, forbidden, checkRole } from '@/lib/server/auth';
 import QRCode from 'qrcode';
 
 export async function GET(request, { params }) {
   const user = await verifyAuth(request);
   if (!user) return unauthorized();
+  if (!checkRole(user, 'OPERATOR', 'MANAGER')) return forbidden('Hanya OPERATOR dan MANAGER yang dapat generate QR');
 
   const { id } = await params;
   const { data: lot } = await supabase.from('raw_material_lots')

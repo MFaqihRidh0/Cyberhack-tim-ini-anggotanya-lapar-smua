@@ -10,29 +10,29 @@ async function main() {
   console.log('🌱 Memulai seed data...');
 
   // ─── USERS ────────────────────────────────────────────────────────────────
-  const passwordHash = await bcrypt.hash('password123', 10);
+  const passwordHash = await bcrypt.hash('SimaArome@2026', 10);
 
   const operator = await prisma.user.upsert({
     where: { email: 'operator@sima.com' },
-    update: {},
+    update: { passwordHash },
     create: { name: 'Operator Gudang', email: 'operator@sima.com', passwordHash, role: 'OPERATOR' },
   });
 
   const qcStaff = await prisma.user.upsert({
     where: { email: 'qc@sima.com' },
-    update: {},
+    update: { passwordHash },
     create: { name: 'Staff QC', email: 'qc@sima.com', passwordHash, role: 'QC_STAFF' },
   });
 
   const ppic = await prisma.user.upsert({
     where: { email: 'ppic@sima.com' },
-    update: {},
+    update: { passwordHash },
     create: { name: 'PPIC Planner', email: 'ppic@sima.com', passwordHash, role: 'PPIC' },
   });
 
   const manager = await prisma.user.upsert({
     where: { email: 'manager@sima.com' },
-    update: {},
+    update: { passwordHash },
     create: { name: 'Manager Produksi', email: 'manager@sima.com', passwordHash, role: 'MANAGER' },
   });
 
@@ -717,10 +717,10 @@ async function main() {
   console.log('🎉 Seed data berhasil dimasukkan!');
   console.log('');
   console.log('Test Credentials:');
-  console.log('  operator@sima.com / password123');
-  console.log('  qc@sima.com / password123');
-  console.log('  ppic@sima.com / password123');
-  console.log('  manager@sima.com / password123');
+  console.log('  operator@sima.com / SimaArome@2026');
+  console.log('  qc@sima.com / SimaArome@2026');
+  console.log('  ppic@sima.com / SimaArome@2026');
+  console.log('  manager@sima.com / SimaArome@2026');
 }
 
 main()

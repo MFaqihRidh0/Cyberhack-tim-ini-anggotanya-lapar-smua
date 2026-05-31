@@ -231,10 +231,10 @@ npm run dev
 
 | Peran | Email | Password |
 |-------|-------|----------|
-| 🟠 **Operator** | `operator@sima.com` | `password123` |
-| 🟢 **QC Staff** | `qc@sima.com` | `password123` |
-| 🔵 **PPIC** | `ppic@sima.com` | `password123` |
-| 🟣 **Manager** | `manager@sima.com` | `password123` |
+| 🟠 **Operator** | `operator@sima.com` | `SimaArome@2026` |
+| 🟢 **QC Staff** | `qc@sima.com` | `SimaArome@2026` |
+| 🔵 **PPIC** | `ppic@sima.com` | `SimaArome@2026` |
+| 🟣 **Manager** | `manager@sima.com` | `SimaArome@2026` |
 
 > 💡 Login sebagai **Manager** untuk melihat seluruh fitur termasuk Master Data & Sample Dispatch.
 

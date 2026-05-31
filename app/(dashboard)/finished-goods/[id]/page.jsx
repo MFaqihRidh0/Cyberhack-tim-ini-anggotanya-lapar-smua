@@ -118,16 +118,23 @@ export default function FinishedGoodDetailPage() {
         </form>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200">
+      {['OPERATOR', 'MANAGER'].includes(user?.role) ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200">
+            <h3 className="font-semibold text-slate-700 mb-4">Status History</h3>
+            <LotTimeline stages={lot.stages} />
+          </div>
+          <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col items-center">
+            <h3 className="font-semibold text-slate-700 mb-4">QR Code</h3>
+            <QRDisplay lotId={lot.id} lotType="finished" lotNumber={lot.lot_number} />
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white p-6 rounded-xl border border-slate-200">
           <h3 className="font-semibold text-slate-700 mb-4">Status History</h3>
           <LotTimeline stages={lot.stages} />
         </div>
-        <div className="bg-white p-6 rounded-xl border border-slate-200 flex flex-col items-center">
-          <h3 className="font-semibold text-slate-700 mb-4">QR Code</h3>
-          <QRDisplay lotId={lot.id} lotType="finished" lotNumber={lot.lot_number} />
-        </div>
-      </div>
+      )}
 
       {lot.sampleDispatches?.length > 0 && (
         <div className="bg-white p-6 rounded-xl border border-slate-200">

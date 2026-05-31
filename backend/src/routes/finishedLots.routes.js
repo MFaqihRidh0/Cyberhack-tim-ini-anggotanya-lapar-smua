@@ -6,7 +6,7 @@ const { allowRoles } = require('../middleware/rbac');
 
 router.get('/', verifyToken, list);
 router.get('/:id', verifyToken, getById);
-router.get('/:id/qr', verifyToken, generateQR);
+router.get('/:id/qr', verifyToken, allowRoles('OPERATOR', 'MANAGER'), generateQR);
 router.patch('/:id/warehouse', verifyToken, allowRoles('OPERATOR', 'MANAGER'), updateWarehouse);
 
 module.exports = router;
