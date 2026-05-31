@@ -1,4 +1,4 @@
-import prisma from '@/lib/server/prisma';
+import supabase from '@/lib/server/db';
 import { verifyAuth, unauthorized } from '@/lib/server/auth';
 
 export async function GET(request, { params }) {
@@ -6,11 +6,19 @@ export async function GET(request, { params }) {
   if (!user) return unauthorized();
 
   const { id } = await params;
-  const order = await prisma.deliveryOrder.findUnique({
-    where: { id },
-    include: { supplier: true, rawLots: { include: { material: true } } },
-  });
 
-  if (!order) return Response.json({ success: false, data: null, message: 'Delivery Order tidak ditemukan' }, { status: 404 });
-  return Response.json({ success: true, data: order, message: 'Berhasil' });
+  const { data: order } = await supabase.from('delivery_orders')
+    .select('*, supplier:suppliers(*)')
+    .eq('id', id)
+    .single();
+
+  if (!order) return Response.json({ success: false, data: null, message: 'Delivery Order not found' }, { status: 404 });
+
+  // Get raw lots linked to this DO
+  const { data: rawLots } = await supabase.from('raw_material_lots')
+    .select('*, material:materials(name, unit, code)')
+    .eq('delivery_order_id', id)
+    .order('date_created', { ascending: false });
+
+  return Response.json({ success: true, data: { ...order, rawLots: rawLots || [] }, message: 'Berhasil' });
 }
