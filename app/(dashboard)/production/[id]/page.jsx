@@ -40,7 +40,13 @@ export default function ProductionDetailPage() {
 
   const { data: availableLots } = useQuery({
     queryKey: ['raw-lots-available'],
-    queryFn: () => api.get('/raw-lots', { params: { status: 'QC_APPROVED' } }).then((r) => r.data.data),
+    queryFn: async () => {
+      const [approved, inQueue] = await Promise.all([
+        api.get('/raw-lots', { params: { status: 'QC_APPROVED' } }).then((r) => r.data.data),
+        api.get('/raw-lots', { params: { status: 'IN_QUEUE' } }).then((r) => r.data.data),
+      ]);
+      return [...(approved || []), ...(inQueue || [])];
+    },
     enabled: addingInput,
   });
 

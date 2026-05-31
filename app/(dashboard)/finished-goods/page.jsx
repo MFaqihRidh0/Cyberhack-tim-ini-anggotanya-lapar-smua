@@ -1,33 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatNumber } from '@/lib/utils';
 import { getUser } from '@/lib/auth';
 import StatusBadge from '@/components/shared/StatusBadge';
-import StatusSelect from '@/components/shared/StatusSelect';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 const STATUSES = ['', 'PRODUCED', 'QC_PENDING', 'QC_APPROVED', 'IN_WAREHOUSE', 'PARTIALLY_DISPATCHED', 'FULLY_DISPATCHED'];
-
-// Semua status + label untuk dropdown inline
-const FG_STATUSES = ['PRODUCED', 'QC_PENDING', 'QC_APPROVED', 'QC_REJECTED', 'IN_WAREHOUSE', 'PARTIALLY_DISPATCHED', 'FULLY_DISPATCHED', 'ON_HOLD'];
-const FG_LABELS = {
-  PRODUCED: 'Produced', QC_PENDING: 'QC Pending', QC_APPROVED: 'QC Approved', QC_REJECTED: 'QC Rejected',
-  IN_WAREHOUSE: 'In Warehouse', PARTIALLY_DISPATCHED: 'Partially Dispatched', FULLY_DISPATCHED: 'Fully Dispatched', ON_HOLD: 'On Hold',
-};
-const FG_AUTH_ROLES = ['OPERATOR', 'QC_STAFF', 'MANAGER'];
 
 export default function FinishedGoodsPage() {
   const [status, setStatus] = useState('');
   const user = getUser();
-  const canUpdate = FG_AUTH_ROLES.includes(user?.role);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ['finished-lots', status],
     queryFn: () => api.get('/finished-lots', { params: status ? { status } : {} }).then((r) => r.data.data),
   });
+
+  async function handleSendToQC(lotId) {
+    try {
+      await api.patch(`/finished-lots/${lotId}/status`, { status: 'QC_PENDING', notes: 'Sent to QC for inspection' });
+      toast.success('Finished lot sent to QC');
+      queryClient.invalidateQueries(['finished-lots']);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed');
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -50,7 +52,7 @@ export default function FinishedGoodsPage() {
               <th className="text-left px-4 py-3 font-medium text-slate-600">Qty</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Warehouse</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">Update Status</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -63,14 +65,11 @@ export default function FinishedGoodsPage() {
                 <td className="px-4 py-3 text-slate-600">{lot.warehouse_zone ? `${lot.warehouse_zone} / ${lot.warehouse_position}` : '-'}</td>
                 <td className="px-4 py-3"><StatusBadge status={lot.current_status} /></td>
                 <td className="px-4 py-3">
-                  <StatusSelect
-                    current={lot.current_status}
-                    statuses={FG_STATUSES}
-                    labels={FG_LABELS}
-                    canUpdate={canUpdate}
-                    endpoint={`/finished-lots/${lot.id}/status`}
-                    invalidateKey={['finished-lots', status]}
-                  />
+                  {lot.current_status === 'PRODUCED' && ['PPIC', 'MANAGER'].includes(user?.role) && (
+                    <button onClick={() => handleSendToQC(lot.id)} className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg font-medium">
+                      Send to QC
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

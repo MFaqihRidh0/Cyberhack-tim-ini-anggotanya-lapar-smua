@@ -45,6 +45,13 @@ export async function PATCH(request, { params }) {
 
       await supabase.from('production_orders').update(updateData).eq('id', id);
 
+      // Mark all raw lots used in this PO as CONSUMED
+      const { data: inputs } = await supabase.from('production_inputs').select('raw_lot_id').eq('production_order_id', id);
+      for (const inp of (inputs || [])) {
+        await supabase.from('raw_material_lots').update({ current_status: 'CONSUMED' }).eq('id', inp.raw_lot_id);
+        await supabase.from('raw_lot_stages').insert({ raw_lot_id: inp.raw_lot_id, stage: 'CONSUMED', actor_id: user.id, notes: 'Used in completed production' });
+      }
+
       // Auto-create FinishedGoodsLot
       const lot_number = await generateLotNumber('SA-FG');
       const { data: fg } = await supabase.from('finished_goods_lots').insert({
@@ -53,11 +60,11 @@ export async function PATCH(request, { params }) {
       }).select().single();
 
       if (fg) {
-        await supabase.from('finished_lot_stages').insert({ finished_lot_id: fg.id, stage: 'PRODUCED', actor_id: user.id, notes: 'Produksi selesai' });
+        await supabase.from('finished_lot_stages').insert({ finished_lot_id: fg.id, stage: 'PRODUCED', actor_id: user.id, notes: 'Production completed' });
       }
 
       const updated = await supabase.from('production_orders').select('*, product:products(*)').eq('id', id).single();
-      return Response.json({ success: true, data: updated.data, message: 'PO COMPLETED, Finished Goods Lot dibuat' });
+      return Response.json({ success: true, data: updated.data, message: 'PO COMPLETED, raw lots consumed, Finished Goods Lot created' });
     }
   }
 
