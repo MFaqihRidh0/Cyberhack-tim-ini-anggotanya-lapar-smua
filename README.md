@@ -30,7 +30,6 @@ _Indonesia's natural extract manufacturer — F&B, cosmetics, & wellness._
 
 - [Problem Statement](#problem-statement)
 - [Solution Overview](#solution-overview)
-- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
@@ -64,14 +63,6 @@ Sima Arome, an Indonesian natural extract manufacturer, relies on **paper forms 
 > **One system, zero limits on traceability** — from raw material intake to sample dispatch.
 
 Every kilogram of raw material that enters the factory is assigned a **lot number**, tracked through QC, scheduled for production, converted into a finished good, and traced all the way to the customer — with a complete audit trail at every step. Each lot also has a **QR code** that can be scanned on the factory floor for instant status lookup.
-
----
-
-## Screenshots
-
-> 🌐 See the full live application at **[main.dse5t6tuz3w2n.amplifyapp.com](https://main.dse5t6tuz3w2n.amplifyapp.com)**
-
-Login with any of the [Demo Accounts](#demo-accounts) to explore all features. The Manager account provides full access to every module including Master Data and Sample Dispatch.
 
 ---
 
