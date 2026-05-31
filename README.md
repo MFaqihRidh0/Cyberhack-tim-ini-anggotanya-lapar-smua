@@ -487,6 +487,14 @@ Every user has one role, and each role gets a specific set of menus and permissi
 | Yasykur Khalis Jati Maulana Yuwono | 5027241112 |
 | M. Faqih Ridho | 5027241123 |
 
+---
+
+## License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for full details.
+
+Copyright © 2026 Tim Ini Anggotanya Lapar Smua
+
 <div align="center">
 
 <br/>
