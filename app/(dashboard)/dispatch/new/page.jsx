@@ -45,7 +45,13 @@ export default function NewDispatchPage() {
 
   const { data: finishedLots } = useQuery({
     queryKey: ['finished-lots-for-dispatch'],
-    queryFn: () => api.get('/finished-lots', { params: { status: 'IN_WAREHOUSE' } }).then((r) => r.data.data),
+    queryFn: async () => {
+      const [inWarehouse, partial] = await Promise.all([
+        api.get('/finished-lots', { params: { status: 'IN_WAREHOUSE' } }).then((r) => r.data.data),
+        api.get('/finished-lots', { params: { status: 'PARTIALLY_DISPATCHED' } }).then((r) => r.data.data),
+      ]);
+      return [...(inWarehouse || []), ...(partial || [])];
+    },
   });
 
   async function handleSubmit(e) {
@@ -96,7 +102,7 @@ export default function NewDispatchPage() {
             <select style={INPUT} value={form.finishedLotId} onChange={(e) => setForm({ ...form, finishedLotId: e.target.value })}>
               <option value="">Select Lot</option>
               {finishedLots?.map((l) => (
-                <option key={l.id} value={l.id}>{l.lot_number} — {l.product?.name} ({l.quantity} {l.unit})</option>
+                <option key={l.id} value={l.id}>{l.lot_number} — {l.product?.name} ({l.quantity} {l.unit}) [{l.current_status}]</option>
               ))}
             </select>
           </Field>
