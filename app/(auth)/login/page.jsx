@@ -91,6 +91,9 @@ export default function LoginPage() {
 
           <div className="left-footer">
             <p>CyberHack 2026 · Sima Arome</p>
+            <p style={{ marginTop: '6px', fontSize: '11px', color: '#4a4840' }}>
+              Built by <span style={{ color: '#F97316', fontWeight: 600 }}>tim ini anggotanya lapar smua</span>
+            </p>
           </div>
         </div>
 

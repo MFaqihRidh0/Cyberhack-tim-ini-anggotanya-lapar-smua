@@ -5,7 +5,19 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Truck, ArrowLeft, Package, StickyNote } from 'lucide-react';
+
+const INPUT = { width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: '#FAFAF8', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' };
+const LABEL = { display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 };
+
+function Field({ label, children }) {
+  return (
+    <div>
+      <label style={LABEL}>{label}</label>
+      {children}
+    </div>
+  );
+}
 
 export default function NewDeliveryOrderPage() {
   const router = useRouter();
@@ -50,75 +62,121 @@ export default function NewDeliveryOrderPage() {
     }
   }
 
+  const validCount = items.filter((i) => i.materialId && i.qty).length;
+
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">Receive New Delivery Order</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Header */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 space-y-4">
-          <p className="text-sm text-slate-500">DO number will be auto-generated (format: DO-YYYYMMDD-XXX)</p>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Supplier</label>
-            <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none">
-              <option value="">Select Supplier</option>
-              {suppliers?.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
-            </select>
+    <div style={{ maxWidth: 640, margin: '0 auto' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 28 }}>
+        <button
+          onClick={() => router.back()}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#7D7A72', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 16 }}
+        >
+          <ArrowLeft size={15} /> Back
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg,#F97316,#FFBC45)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(249,115,22,0.3)' }}>
+            <Truck size={22} color="#fff" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" rows={2} placeholder="Delivery note remarks, etc." />
+            <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, color: '#1C1A14', lineHeight: 1.2 }}>New Delivery Order</h1>
+            <p style={{ fontSize: 13, color: '#7D7A72', marginTop: 2 }}>DO number will be auto-generated (format: DO-YYYYMMDD-XXX)</p>
+          </div>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
+        {/* Supplier & Notes */}
+        <div style={{ backgroundColor: '#fff', border: '1px solid #ECEAE3', borderRadius: 14, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #F5F4F0', display: 'flex', alignItems: 'center', gap: 10, backgroundColor: '#FAFAF8' }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#FFBC45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Truck size={15} color="#fff" />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#3D3B36' }}>Supplier Information</span>
+          </div>
+          <div style={{ padding: '20px', display: 'grid', gap: 14 }}>
+            <Field label="Supplier *">
+              <select style={INPUT} value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
+                <option value="">Select Supplier</option>
+                {suppliers?.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.code})</option>)}
+              </select>
+            </Field>
+            <Field label="Notes">
+              <textarea style={{ ...INPUT, height: 72, resize: 'vertical' }} placeholder="Delivery note remarks, batch info, etc." value={notes} onChange={(e) => setNotes(e.target.value)} />
+            </Field>
           </div>
         </div>
 
-        {/* Items */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-700">Material List</h3>
-            <button type="button" onClick={addItem} className="flex items-center gap-1 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg">
-              <Plus className="h-4 w-4" /> Add Item
+        {/* Material Items */}
+        <div style={{ backgroundColor: '#fff', border: '1px solid #ECEAE3', borderRadius: 14, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #F5F4F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FAFAF8' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg,#6366F1,#8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Package size={15} color="#fff" />
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#3D3B36' }}>Material List</span>
+              <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 20, backgroundColor: '#FFF3E0', color: '#C2580A', fontWeight: 600 }}>{items.length} item{items.length > 1 ? 's' : ''}</span>
+            </div>
+            <button
+              type="button"
+              onClick={addItem}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#FFBC45)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+            >
+              <Plus size={14} /> Add Item
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div style={{ padding: '16px 20px', display: 'grid', gap: 12 }}>
             {items.map((item, i) => (
-              <div key={i} className="p-4 bg-slate-50 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-600">Item #{i + 1}</span>
+              <div key={i} style={{ padding: '16px', backgroundColor: '#FAFAF8', borderRadius: 10, border: '1px solid #F0EDE6', position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#F97316', letterSpacing: '0.05em' }}>ITEM #{i + 1}</span>
                   {items.length > 1 && (
-                    <button type="button" onClick={() => removeItem(i)} className="text-red-500 hover:text-red-700">
-                      <Trash2 className="h-4 w-4" />
+                    <button type="button" onClick={() => removeItem(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', padding: 4, borderRadius: 6, display: 'flex', alignItems: 'center' }}>
+                      <Trash2 size={15} />
                     </button>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="col-span-2">
-                    <label className="text-xs text-slate-500">Material</label>
-                    <select value={item.materialId} onChange={(e) => updateItem(i, 'materialId', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <Field label="Material *">
+                    <select style={INPUT} value={item.materialId} onChange={(e) => updateItem(i, 'materialId', e.target.value)}>
                       <option value="">Select Material</option>
                       {materials?.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.code}) — {m.unit}</option>)}
                     </select>
+                  </Field>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <Field label="Quantity *">
+                      <input style={INPUT} type="number" step="0.01" placeholder="100" value={item.qty} onChange={(e) => updateItem(i, 'qty', e.target.value)} />
+                    </Field>
+                    <Field label="Supplier Lot No.">
+                      <input style={INPUT} type="text" placeholder="Optional" value={item.supplierLotNo} onChange={(e) => updateItem(i, 'supplierLotNo', e.target.value)} />
+                    </Field>
                   </div>
-                  <div>
-                    <label className="text-xs text-slate-500">Quantity</label>
-                    <input type="number" step="0.01" value={item.qty} onChange={(e) => updateItem(i, 'qty', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="100" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-slate-500">Supplier Lot No.</label>
-                    <input type="text" value={item.supplierLotNo} onChange={(e) => updateItem(i, 'supplierLotNo', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Optional" />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-xs text-slate-500">Expiry Date</label>
-                    <input type="date" value={item.expiryDate} onChange={(e) => updateItem(i, 'expiryDate', e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
-                  </div>
+                  <Field label="Expiry Date">
+                    <input style={INPUT} type="date" value={item.expiryDate} onChange={(e) => updateItem(i, 'expiryDate', e.target.value)} />
+                  </Field>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <button type="submit" disabled={loading} className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition disabled:opacity-50">
-          {loading ? 'Saving...' : `Save DO (${items.filter(i => i.materialId && i.qty).length} item)`}
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #ECEAE3', background: '#fff', color: '#57544E', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ flex: 2, padding: '12px', borderRadius: 10, background: 'linear-gradient(135deg,#F97316,#FFBC45)', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', opacity: loading ? 0.7 : 1, boxShadow: '0 2px 8px rgba(249,115,22,0.35)' }}
+          >
+            {loading ? 'Saving...' : `Save DO (${validCount} item${validCount !== 1 ? 's' : ''})`}
+          </button>
+        </div>
       </form>
     </div>
   );

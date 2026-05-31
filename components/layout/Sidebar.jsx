@@ -187,6 +187,14 @@ export default function Sidebar({ user, open = false, onClose = () => {} }) {
           })}
         </nav>
 
+        {/* Credit */}
+        <div style={{ padding: '8px 16px', textAlign: 'center' }}>
+          <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.18)', letterSpacing: '0.04em', lineHeight: 1.6 }}>
+            tim ini anggotanya lapar smua<br />
+            <span style={{ color: 'rgba(249,115,22,0.4)' }}>CyberHack 2026</span>
+          </p>
+        </div>
+
         {/* Footer — user */}
         <div className="p-3" style={{ borderTop: '1px solid #2E2B22' }}>
           <div
