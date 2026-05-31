@@ -9,18 +9,19 @@ import { getUser } from '@/lib/auth';
 import StatusBadge from '@/components/shared/StatusBadge';
 import toast from 'react-hot-toast';
 
-const NEXT_STATUS = {
-  QUEUED:      ['SCHEDULED', 'CANCELLED'],
-  SCHEDULED:   ['IN_PROGRESS', 'CANCELLED'],
-  IN_PROGRESS: ['COMPLETED', 'CANCELLED'],
-};
+// Semua status yang relevan untuk Production Order
+const PO_STATUSES = ['QUEUED', 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
 
 const STATUS_LABELS = {
+  QUEUED:      'Queued',
   SCHEDULED:   'Scheduled',
   IN_PROGRESS: 'In Progress',
   COMPLETED:   'Completed',
   CANCELLED:   'Cancelled',
 };
+
+// Role yang berwenang mengubah status production order
+const PO_AUTH_ROLES = ['PPIC', 'MANAGER'];
 
 export default function ProductionDetailPage() {
   const { id } = useParams();
@@ -62,15 +63,15 @@ export default function ProductionDetailPage() {
     }
   }
 
-  async function handleUpdateStatus() {
-    if (!selectedStatus) { toast.error('Please select a status'); return; }
-    if (selectedStatus === 'COMPLETED' && !actualQty) { toast.error('Actual Qty is required to complete'); return; }
+  async function handleUpdateStatus(value) {
+    if (value === po.status) return;
+    if (value === 'COMPLETED' && !actualQty) { toast.error('Actual Qty is required to complete'); return; }
     setUpdating(true);
     try {
-      const body = { status: selectedStatus };
-      if (selectedStatus === 'COMPLETED') body.actualQty = Number(actualQty);
+      const body = { status: value };
+      if (value === 'COMPLETED') body.actualQty = Number(actualQty);
       await api.patch(`/production-orders/${id}`, body);
-      toast.success(`Status updated to ${STATUS_LABELS[selectedStatus] || selectedStatus}`);
+      toast.success(`Status updated to ${STATUS_LABELS[value] || value}`);
       setSelectedStatus('');
       queryClient.invalidateQueries(['production-order', id]);
     } catch (err) {
@@ -83,8 +84,9 @@ export default function ProductionDetailPage() {
   if (isLoading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div></div>;
   if (!po) return <p className="text-slate-500">Production Order not found</p>;
 
-  const canUpdateStatus = ['PPIC', 'MANAGER'].includes(user?.role) && NEXT_STATUS[po.status];
-  const options = NEXT_STATUS[po.status] || [];
+  const canUpdate = PO_AUTH_ROLES.includes(user?.role);
+  const statusValue = selectedStatus || po.status;
+  const statusChanged = statusValue !== po.status;
 
   return (
     <div className="space-y-6">
@@ -96,38 +98,40 @@ export default function ProductionDetailPage() {
         <StatusBadge status={po.status} />
       </div>
 
-      {canUpdateStatus && (
-        <div style={{ backgroundColor: '#fff', border: '1px solid #ECEAE3', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 180 }}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 }}>Update Status</label>
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: '#FAFAF8', outline: 'none', fontFamily: 'inherit' }}
-            >
-              <option value="">— Select next status —</option>
-              {options.map((s) => <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>)}
-            </select>
+      <div style={{ backgroundColor: '#fff', border: '1px solid #ECEAE3', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 180 }}>
+          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 }}>
+            {canUpdate ? 'Update Status' : 'Current Status (read-only)'}
+          </label>
+          <select
+            value={statusValue}
+            disabled={!canUpdate || updating}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: canUpdate ? '#FAFAF8' : '#F0EEE9', outline: 'none', fontFamily: 'inherit', cursor: canUpdate ? 'pointer' : 'not-allowed' }}
+          >
+            {PO_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>)}
+          </select>
+        </div>
+        {canUpdate && statusValue === 'COMPLETED' && (
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 }}>Actual Qty *</label>
+            <input
+              type="number" step="0.01" placeholder={`e.g. ${po.target_qty}`}
+              value={actualQty} onChange={(e) => setActualQty(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: '#FAFAF8', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+            />
           </div>
-          {selectedStatus === 'COMPLETED' && (
-            <div style={{ flex: 1, minWidth: 160 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 }}>Actual Qty *</label>
-              <input
-                type="number" step="0.01" placeholder={`e.g. ${po.target_qty}`}
-                value={actualQty} onChange={(e) => setActualQty(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: '#FAFAF8', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
-              />
-            </div>
-          )}
+        )}
+        {canUpdate && (
           <button
-            onClick={handleUpdateStatus}
-            disabled={!selectedStatus || updating}
-            style={{ padding: '10px 22px', borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#FFBC45)', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: selectedStatus ? 'pointer' : 'not-allowed', opacity: (!selectedStatus || updating) ? 0.5 : 1, whiteSpace: 'nowrap' }}
+            onClick={() => handleUpdateStatus(statusValue)}
+            disabled={!statusChanged || updating}
+            style={{ padding: '10px 22px', borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#FFBC45)', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: statusChanged ? 'pointer' : 'not-allowed', opacity: (!statusChanged || updating) ? 0.5 : 1, whiteSpace: 'nowrap' }}
           >
             {updating ? 'Saving...' : 'Apply'}
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {po.actual_qty && (
         <div className="bg-white p-3 rounded-xl border border-slate-200 text-sm text-slate-600">

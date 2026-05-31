@@ -4,13 +4,25 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatNumber } from '@/lib/utils';
+import { getUser } from '@/lib/auth';
 import StatusBadge from '@/components/shared/StatusBadge';
+import StatusSelect from '@/components/shared/StatusSelect';
 import Link from 'next/link';
 
 const STATUSES = ['', 'PRODUCED', 'QC_PENDING', 'QC_APPROVED', 'IN_WAREHOUSE', 'PARTIALLY_DISPATCHED', 'FULLY_DISPATCHED'];
 
+// Semua status + label untuk dropdown inline
+const FG_STATUSES = ['PRODUCED', 'QC_PENDING', 'QC_APPROVED', 'QC_REJECTED', 'IN_WAREHOUSE', 'PARTIALLY_DISPATCHED', 'FULLY_DISPATCHED', 'ON_HOLD'];
+const FG_LABELS = {
+  PRODUCED: 'Produced', QC_PENDING: 'QC Pending', QC_APPROVED: 'QC Approved', QC_REJECTED: 'QC Rejected',
+  IN_WAREHOUSE: 'In Warehouse', PARTIALLY_DISPATCHED: 'Partially Dispatched', FULLY_DISPATCHED: 'Fully Dispatched', ON_HOLD: 'On Hold',
+};
+const FG_AUTH_ROLES = ['OPERATOR', 'QC_STAFF', 'MANAGER'];
+
 export default function FinishedGoodsPage() {
   const [status, setStatus] = useState('');
+  const user = getUser();
+  const canUpdate = FG_AUTH_ROLES.includes(user?.role);
 
   const { data, isLoading } = useQuery({
     queryKey: ['finished-lots', status],
@@ -38,10 +50,11 @@ export default function FinishedGoodsPage() {
               <th className="text-left px-4 py-3 font-medium text-slate-600">Qty</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Warehouse</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Update Status</th>
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>}
+            {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>}
             {data?.map((lot) => (
               <tr key={lot.id} className="border-b border-slate-100 hover:bg-slate-50">
                 <td className="px-4 py-3"><Link href={`/finished-goods/${lot.id}`} className="font-medium text-blue-600 hover:underline">{lot.lot_number}</Link></td>
@@ -49,9 +62,19 @@ export default function FinishedGoodsPage() {
                 <td className="px-4 py-3 text-slate-600">{formatNumber(lot.quantity)} {lot.unit}</td>
                 <td className="px-4 py-3 text-slate-600">{lot.warehouse_zone ? `${lot.warehouse_zone} / ${lot.warehouse_position}` : '-'}</td>
                 <td className="px-4 py-3"><StatusBadge status={lot.current_status} /></td>
+                <td className="px-4 py-3">
+                  <StatusSelect
+                    current={lot.current_status}
+                    statuses={FG_STATUSES}
+                    labels={FG_LABELS}
+                    canUpdate={canUpdate}
+                    endpoint={`/finished-lots/${lot.id}/status`}
+                    invalidateKey={['finished-lots', status]}
+                  />
+                </td>
               </tr>
             ))}
-            {data?.length === 0 && <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">No data</td></tr>}
+            {data?.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">No data</td></tr>}
           </tbody>
         </table>
       </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -10,17 +11,16 @@ import LotTimeline from '@/components/lots/LotTimeline';
 import QRDisplay from '@/components/lots/QRDisplay';
 import toast from 'react-hot-toast';
 
-const NEXT_STATUS_RAW = {
-  OPERATOR: { INCOMING: ['QC_PENDING'] },
-  QC_STAFF:  { QC_PENDING: ['QC_APPROVED', 'QC_REJECTED'] },
-  PPIC:      { QC_APPROVED: ['IN_QUEUE'], IN_QUEUE: ['IN_PRODUCTION'], IN_PRODUCTION: ['CONSUMED'] },
-  MANAGER:   { INCOMING: ['QC_PENDING'], QC_PENDING: ['QC_APPROVED', 'QC_REJECTED'], QC_APPROVED: ['IN_QUEUE'], IN_QUEUE: ['IN_PRODUCTION'], IN_PRODUCTION: ['CONSUMED'] },
-};
+// Semua status yang relevan untuk Raw Material Lot
+const RAW_STATUSES = ['INCOMING', 'QC_PENDING', 'QC_APPROVED', 'QC_REJECTED', 'IN_QUEUE', 'IN_PRODUCTION', 'CONSUMED', 'ON_HOLD'];
 
 const STATUS_LABELS_RAW = {
-  QC_PENDING: 'QC Pending', QC_APPROVED: 'QC Approved', QC_REJECTED: 'QC Rejected',
-  IN_QUEUE: 'In Queue', IN_PRODUCTION: 'In Production', CONSUMED: 'Consumed',
+  INCOMING: 'Incoming', QC_PENDING: 'QC Pending', QC_APPROVED: 'QC Approved', QC_REJECTED: 'QC Rejected',
+  IN_QUEUE: 'In Queue', IN_PRODUCTION: 'In Production', CONSUMED: 'Consumed', ON_HOLD: 'On Hold',
 };
+
+// Role yang berwenang mengubah status raw lot
+const RAW_AUTH_ROLES = ['OPERATOR', 'QC_STAFF', 'PPIC', 'MANAGER'];
 
 export default function RawLotDetailPage() {
   const { id } = useParams();
@@ -67,28 +67,33 @@ export default function RawLotDetailPage() {
 
       {/* Status Dropdown */}
       {(() => {
-        const options = NEXT_STATUS_RAW[user?.role]?.[lot.current_status] || [];
-        if (options.length === 0) return null;
+        const canUpdate = RAW_AUTH_ROLES.includes(user?.role);
+        const value = selectedStatus || lot.current_status;
+        const changed = value !== lot.current_status;
         return (
           <div style={{ backgroundColor: '#fff', border: '1px solid #ECEAE3', borderRadius: 14, padding: '16px 20px', display: 'flex', alignItems: 'flex-end', gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 }}>Update Status</label>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#57544E', marginBottom: 6 }}>
+                {canUpdate ? 'Update Status' : 'Current Status (read-only)'}
+              </label>
               <select
-                value={selectedStatus}
+                value={value}
+                disabled={!canUpdate || updating}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: '#FAFAF8', outline: 'none', fontFamily: 'inherit' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #ECEAE3', fontSize: 14, color: '#1C1A14', backgroundColor: canUpdate ? '#FAFAF8' : '#F0EEE9', outline: 'none', fontFamily: 'inherit', cursor: canUpdate ? 'pointer' : 'not-allowed' }}
               >
-                <option value="">— Select next status —</option>
-                {options.map((s) => <option key={s} value={s}>{STATUS_LABELS_RAW[s] || s}</option>)}
+                {RAW_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS_RAW[s] || s}</option>)}
               </select>
             </div>
-            <button
-              onClick={handleStatusUpdate}
-              disabled={!selectedStatus || updating}
-              style={{ padding: '10px 22px', borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#FFBC45)', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: selectedStatus ? 'pointer' : 'not-allowed', opacity: (!selectedStatus || updating) ? 0.5 : 1, whiteSpace: 'nowrap' }}
-            >
-              {updating ? 'Saving...' : 'Apply'}
-            </button>
+            {canUpdate && (
+              <button
+                onClick={handleStatusUpdate}
+                disabled={!changed || updating}
+                style={{ padding: '10px 22px', borderRadius: 8, background: 'linear-gradient(135deg,#F97316,#FFBC45)', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: changed ? 'pointer' : 'not-allowed', opacity: (!changed || updating) ? 0.5 : 1, whiteSpace: 'nowrap' }}
+              >
+                {updating ? 'Saving...' : 'Apply'}
+              </button>
+            )}
           </div>
         );
       })()}
