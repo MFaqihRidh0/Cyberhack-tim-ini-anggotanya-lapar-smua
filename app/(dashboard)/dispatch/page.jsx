@@ -40,7 +40,8 @@ export default function DispatchPage() {
             <tr>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Dispatch No.</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Customer</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">Lot</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Lot ID</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Product</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Destination</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Date</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
@@ -48,12 +49,15 @@ export default function DispatchPage() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>}
+            {isLoading && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>}
             {data?.map((d) => (
-              <tr key={d.id} className="border-b border-slate-100">
-                <td className="px-4 py-3 font-medium text-slate-800">{d.dispatch_number}</td>
+              <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50">
+                <td className="px-4 py-3">
+                  <Link href={`/dispatch/${d.id}`} className="font-medium text-blue-600 hover:underline">{d.dispatch_number}</Link>
+                </td>
                 <td className="px-4 py-3 text-slate-600">{d.customer_name}</td>
-                <td className="px-4 py-3 text-slate-600">{d.finished_lot?.lot_number}</td>
+                <td className="px-4 py-3 text-slate-600">{d.finished_lot?.lot_number || '-'}</td>
+                <td className="px-4 py-3 text-slate-600">{d.finished_lot?.product?.name || '-'}</td>
                 <td className="px-4 py-3 text-slate-600">{d.destination}{d.country ? ` (${d.country})` : ''}</td>
                 <td className="px-4 py-3 text-slate-600">{formatDateTime(d.dispatch_date)}</td>
                 <td className="px-4 py-3">
@@ -66,7 +70,7 @@ export default function DispatchPage() {
                 </td>
               </tr>
             ))}
-            {data?.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">No dispatches yet</td></tr>}
+            {data?.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-500">No dispatches yet</td></tr>}
           </tbody>
         </table>
       </div>
