@@ -1,42 +1,40 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatDate, formatNumber } from '@/lib/utils';
 import { getUser } from '@/lib/auth';
 import StatusBadge from '@/components/shared/StatusBadge';
-import StatusSelect from '@/components/shared/StatusSelect';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const STATUSES = ['', 'INCOMING', 'QC_PENDING', 'QC_APPROVED', 'QC_REJECTED', 'IN_QUEUE', 'IN_PRODUCTION', 'CONSUMED', 'ON_HOLD'];
 
-// Semua status + label untuk dropdown inline
-const RAW_STATUSES = ['INCOMING', 'QC_PENDING', 'QC_APPROVED', 'QC_REJECTED', 'IN_QUEUE', 'IN_PRODUCTION', 'CONSUMED', 'ON_HOLD'];
-const RAW_LABELS = {
-  INCOMING: 'Incoming', QC_PENDING: 'QC Pending', QC_APPROVED: 'QC Approved', QC_REJECTED: 'QC Rejected',
-  IN_QUEUE: 'In Queue', IN_PRODUCTION: 'In Production', CONSUMED: 'Consumed', ON_HOLD: 'On Hold',
-};
-const RAW_AUTH_ROLES = ['OPERATOR', 'QC_STAFF', 'PPIC', 'MANAGER'];
-
 export default function RawLotsPage() {
   const [status, setStatus] = useState('');
+  const queryClient = useQueryClient();
   const user = getUser();
-  const canUpdate = RAW_AUTH_ROLES.includes(user?.role);
 
   const { data, isLoading } = useQuery({
     queryKey: ['raw-lots', status],
     queryFn: () => api.get('/raw-lots', { params: status ? { status } : {} }).then((r) => r.data.data),
   });
 
+  async function handleSendToQC(lotId) {
+    try {
+      await api.patch(`/raw-lots/${lotId}/status`, { status: 'QC_PENDING', notes: 'Sent to QC for inspection' });
+      toast.success('Lot sent to QC');
+      queryClient.invalidateQueries(['raw-lots']);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update status');
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">Raw Material Lots</h1>
-        <Link href="/raw-lots/new" className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition">
-          <Plus className="h-4 w-4" /> Receive New Lot
-        </Link>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -57,7 +55,7 @@ export default function RawLotsPage() {
               <th className="text-left px-4 py-3 font-medium text-slate-600">Qty</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Expiry</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">Update Status</th>
+              {user?.role === 'OPERATOR' && <th className="text-left px-4 py-3 font-medium text-slate-600">Action</th>}
             </tr>
           </thead>
           <tbody>
@@ -72,16 +70,15 @@ export default function RawLotsPage() {
                 <td className="px-4 py-3 text-slate-600">{formatNumber(lot.initial_qty)} {lot.material?.unit}</td>
                 <td className="px-4 py-3"><StatusBadge status={lot.current_status} /></td>
                 <td className="px-4 py-3 text-slate-600">{formatDate(lot.expiry_date)}</td>
-                <td className="px-4 py-3">
-                  <StatusSelect
-                    current={lot.current_status}
-                    statuses={RAW_STATUSES}
-                    labels={RAW_LABELS}
-                    canUpdate={canUpdate}
-                    endpoint={`/raw-lots/${lot.id}/status`}
-                    invalidateKey={['raw-lots', status]}
-                  />
-                </td>
+                {user?.role === 'OPERATOR' && (
+                  <td className="px-4 py-3">
+                    {lot.current_status === 'INCOMING' && (
+                      <button onClick={() => handleSendToQC(lot.id)} className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg font-medium">
+                        Send to QC
+                      </button>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
             {data?.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">No data</td></tr>}
