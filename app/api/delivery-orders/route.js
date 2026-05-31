@@ -33,7 +33,7 @@ export async function POST(request) {
 
   // Create the delivery order with status INCOMING (lots NOT created yet)
   const { data: order, error } = await supabase.from('delivery_orders')
-    .insert({ do_number: doNumber, supplier_id: supplierId, notes, status: 'INCOMING' })
+    .insert({ do_number: doNumber, supplier_id: supplierId, notes, status: 'INCOMING', ordered_at: new Date().toISOString(), received_date: null })
     .select('*, supplier:suppliers(*)')
     .single();
 

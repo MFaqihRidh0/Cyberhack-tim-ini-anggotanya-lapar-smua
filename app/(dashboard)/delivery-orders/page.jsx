@@ -40,14 +40,15 @@ export default function DeliveryOrdersPage() {
             <tr>
               <th className="text-left px-4 py-3 font-medium text-slate-600">No. DO</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Supplier</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-600">Order Date & Time</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Ordered</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Received</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
               <th className="text-left px-4 py-3 font-medium text-slate-600">Action</th>
             </tr>
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>
             )}
             {data?.map((d) => (
               <tr key={d.id} className="border-b border-slate-100 hover:bg-slate-50">
@@ -55,7 +56,8 @@ export default function DeliveryOrdersPage() {
                   <Link href={`/delivery-orders/${d.id}`} className="font-medium text-blue-600 hover:underline">{d.do_number}</Link>
                 </td>
                 <td className="px-4 py-3 text-slate-600">{d.supplier?.name}</td>
-                <td className="px-4 py-3 text-slate-600">{formatDateTime(d.received_date)}</td>
+                <td className="px-4 py-3 text-slate-600">{formatDateTime(d.ordered_at)}</td>
+                <td className="px-4 py-3 text-slate-600">{d.status === 'RECEIVED' ? formatDateTime(d.received_date) : '-'}</td>
                 <td className="px-4 py-3">
                   {d.status === 'RECEIVED'
                     ? <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">RECEIVED</span>
@@ -71,7 +73,7 @@ export default function DeliveryOrdersPage() {
               </tr>
             ))}
             {data?.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">No Delivery Orders yet</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">No Delivery Orders yet</td></tr>
             )}
           </tbody>
         </table>
