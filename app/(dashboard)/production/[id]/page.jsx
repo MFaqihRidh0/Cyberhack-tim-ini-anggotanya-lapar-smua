@@ -45,7 +45,17 @@ export default function ProductionDetailPage() {
         api.get('/raw-lots', { params: { status: 'QC_APPROVED' } }).then((r) => r.data.data),
         api.get('/raw-lots', { params: { status: 'IN_QUEUE' } }).then((r) => r.data.data),
       ]);
-      return [...(approved || []), ...(inQueue || [])];
+      const all = [...(approved || []), ...(inQueue || [])];
+      // Fetch remaining qty for each lot
+      const withRemaining = await Promise.all(all.map(async (lot) => {
+        try {
+          const res = await api.get(`/raw-lots/${lot.id}`);
+          return { ...lot, remainingQty: res.data.data.remainingQty };
+        } catch {
+          return { ...lot, remainingQty: lot.initial_qty };
+        }
+      }));
+      return withRemaining.filter(l => l.remainingQty > 0);
     },
     enabled: addingInput,
   });
@@ -157,7 +167,7 @@ export default function ProductionDetailPage() {
           <form onSubmit={handleAddInput} className="mb-4 p-4 bg-slate-50 rounded-lg space-y-3">
             <select value={inputForm.rawLotId} onChange={(e) => setInputForm({ ...inputForm, rawLotId: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
               <option value="">Select Raw Lot</option>
-              {availableLots?.map((l) => <option key={l.id} value={l.id}>{l.internal_lot_no} — {l.material?.name} ({formatNumber(l.initial_qty)} {l.material?.unit})</option>)}
+              {availableLots?.map((l) => <option key={l.id} value={l.id}>{l.internal_lot_no} — {l.material?.name} (remaining: {formatNumber(l.remainingQty)} {l.material?.unit})</option>)}
             </select>
             <input type="number" step="0.01" placeholder="Qty Used" value={inputForm.qtyUsed} onChange={(e) => setInputForm({ ...inputForm, qtyUsed: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
             <div className="flex gap-2">
