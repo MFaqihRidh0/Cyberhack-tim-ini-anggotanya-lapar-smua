@@ -39,7 +39,7 @@ export default function NewDispatchPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     finishedLotId: '', customerName: '', customerEmail: '', customerPhone: '',
-    destination: 'LOCAL', country: '', quantity: '', unit: 'kg', trackingNumber: '', notes: '',
+    destination: 'LOCAL', country: '', quantity: '', trackingNumber: '', notes: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -50,7 +50,19 @@ export default function NewDispatchPage() {
         api.get('/finished-lots', { params: { status: 'IN_WAREHOUSE' } }).then((r) => r.data.data),
         api.get('/finished-lots', { params: { status: 'PARTIALLY_DISPATCHED' } }).then((r) => r.data.data),
       ]);
-      return [...(inWarehouse || []), ...(partial || [])];
+      const all = [...(inWarehouse || []), ...(partial || [])];
+      // Fetch dispatched qty for each lot to compute remaining
+      const withRemaining = await Promise.all(all.map(async (lot) => {
+        try {
+          const res = await api.get('/sample-dispatches');
+          const dispatches = (res.data.data || []).filter(d => d.finished_lot_id === lot.id);
+          const dispatched = dispatches.reduce((s, d) => s + d.quantity, 0);
+          return { ...lot, dispatched, remaining: lot.quantity - dispatched };
+        } catch {
+          return { ...lot, dispatched: 0, remaining: lot.quantity };
+        }
+      }));
+      return withRemaining.filter(l => l.remaining > 0);
     },
   });
 
@@ -60,9 +72,11 @@ export default function NewDispatchPage() {
     if (form.destination === 'EXPORT' && !form.country) { toast.error('Country is required for EXPORT'); return; }
     setLoading(true);
     try {
+      const selectedLot = finishedLots?.find(l => l.id === form.finishedLotId);
       await api.post('/sample-dispatches', {
         ...form,
         quantity: Number(form.quantity),
+        unit: selectedLot?.unit || 'kg',
         country: form.destination === 'EXPORT' ? form.country : null,
       });
       toast.success('Sample Dispatch created successfully');
@@ -102,18 +116,13 @@ export default function NewDispatchPage() {
             <select style={INPUT} value={form.finishedLotId} onChange={(e) => setForm({ ...form, finishedLotId: e.target.value })}>
               <option value="">Select Lot</option>
               {finishedLots?.map((l) => (
-                <option key={l.id} value={l.id}>{l.lot_number} — {l.product?.name} ({l.quantity} {l.unit}) [{l.current_status}]</option>
+                <option key={l.id} value={l.id}>{l.lot_number} — {l.product?.name} (remaining: {l.remaining} {l.unit})</option>
               ))}
             </select>
           </Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <Field label="Quantity *">
-              <input style={INPUT} type="number" step="0.01" placeholder="e.g. 5" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
-            </Field>
-            <Field label="Unit">
-              <input style={INPUT} type="text" placeholder="kg / liter / botol" value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} />
-            </Field>
-          </div>
+          <Field label="Quantity *">
+            <input style={INPUT} type="number" step="0.01" placeholder="e.g. 5" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
+          </Field>
         </SectionCard>
 
         {/* Customer */}
