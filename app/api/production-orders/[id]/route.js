@@ -45,11 +45,30 @@ export async function PATCH(request, { params }) {
 
       await supabase.from('production_orders').update(updateData).eq('id', id);
 
-      // Mark all raw lots used in this PO as CONSUMED
-      const { data: inputs } = await supabase.from('production_inputs').select('raw_lot_id').eq('production_order_id', id);
+      // Mark raw lots: CONSUMED if fully used, back to IN_QUEUE if partially used
+      const { data: inputs } = await supabase.from('production_inputs').select('raw_lot_id, qty_used').eq('production_order_id', id);
+      const lotUsageMap = {};
       for (const inp of (inputs || [])) {
-        await supabase.from('raw_material_lots').update({ current_status: 'CONSUMED' }).eq('id', inp.raw_lot_id);
-        await supabase.from('raw_lot_stages').insert({ raw_lot_id: inp.raw_lot_id, stage: 'CONSUMED', actor_id: user.id, notes: 'Used in completed production' });
+        lotUsageMap[inp.raw_lot_id] = (lotUsageMap[inp.raw_lot_id] || 0) + inp.qty_used;
+      }
+
+      for (const [rawLotId, totalUsed] of Object.entries(lotUsageMap)) {
+        const { data: rawLot } = await supabase.from('raw_material_lots').select('initial_qty').eq('id', rawLotId).single();
+        if (!rawLot) continue;
+
+        // Also check usage from OTHER production orders
+        const { data: allInputs } = await supabase.from('production_inputs').select('qty_used').eq('raw_lot_id', rawLotId);
+        const totalUsedAll = (allInputs || []).reduce((s, i) => s + i.qty_used, 0);
+
+        if (totalUsedAll >= rawLot.initial_qty) {
+          // Fully consumed
+          await supabase.from('raw_material_lots').update({ current_status: 'CONSUMED' }).eq('id', rawLotId);
+          await supabase.from('raw_lot_stages').insert({ raw_lot_id: rawLotId, stage: 'CONSUMED', actor_id: user.id, notes: `Fully used (${totalUsedAll}/${rawLot.initial_qty})` });
+        } else {
+          // Partially used — return to IN_QUEUE so it can be used again
+          await supabase.from('raw_material_lots').update({ current_status: 'IN_QUEUE' }).eq('id', rawLotId);
+          await supabase.from('raw_lot_stages').insert({ raw_lot_id: rawLotId, stage: 'IN_QUEUE', actor_id: user.id, notes: `Partially used (${totalUsedAll}/${rawLot.initial_qty}), returned to queue` });
+        }
       }
 
       // Auto-create FinishedGoodsLot
