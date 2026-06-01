@@ -1,0 +1,92 @@
+'use client';
+
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
+import { getUser } from '@/lib/auth';
+import StatusBadge from '@/components/shared/StatusBadge';
+import StatusSelect from '@/components/shared/StatusSelect';
+import { formatDate, formatNumber } from '@/lib/utils';
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
+
+const STATUSES = ['', 'QUEUED', 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+
+// Semua status + label untuk dropdown inline (kecuali COMPLETED — butuh Actual Qty, lewat halaman detail)
+const PO_STATUSES = ['QUEUED', 'SCHEDULED', 'IN_PROGRESS', 'CANCELLED'];
+const PO_LABELS = {
+  QUEUED: 'Queued', SCHEDULED: 'Scheduled', IN_PROGRESS: 'In Progress', COMPLETED: 'Completed', CANCELLED: 'Cancelled',
+};
+const PO_AUTH_ROLES = ['PPIC', 'MANAGER'];
+
+export default function ProductionPage() {
+  const [status, setStatus] = useState('');
+  const user = getUser();
+  const canUpdate = PO_AUTH_ROLES.includes(user?.role);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['production-orders', status],
+    queryFn: () => api.get('/production-orders', { params: status ? { status } : {} }).then((r) => r.data.data),
+  });
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-800">Production Orders</h1>
+        <Link href="/production/new" className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition">
+          <Plus className="h-4 w-4" /> New Production Order
+        </Link>
+      </div>
+
+      <div className="flex gap-2 flex-wrap">
+        {STATUSES.map((s) => (
+          <button key={s} onClick={() => setStatus(s)} className={`px-3 py-1.5 text-sm rounded-lg transition ${status === s ? 'bg-orange-500 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+            {s || 'All'}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Order No.</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Product</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Target Qty</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Priority</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Scheduled</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-600">Update Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">Loading...</td></tr>}
+            {data?.map((po) => (
+              <tr key={po.id} className="border-b border-slate-100 hover:bg-slate-50">
+                <td className="px-4 py-3">
+                  <Link href={`/production/${po.id}`} className="font-medium text-blue-600 hover:underline">{po.order_number}</Link>
+                </td>
+                <td className="px-4 py-3 text-slate-600">{po.product?.name}</td>
+                <td className="px-4 py-3 text-slate-600">{formatNumber(po.target_qty)}</td>
+                <td className="px-4 py-3 text-slate-600">{po.priority}</td>
+                <td className="px-4 py-3"><StatusBadge status={po.status} /></td>
+                <td className="px-4 py-3 text-slate-600">{formatDate(po.scheduled_date)}</td>
+                <td className="px-4 py-3">
+                  <StatusSelect
+                    current={po.status}
+                    statuses={PO_STATUSES}
+                    labels={PO_LABELS}
+                    canUpdate={canUpdate}
+                    endpoint={`/production-orders/${po.id}`}
+                    invalidateKey={['production-orders', status]}
+                  />
+                </td>
+              </tr>
+            ))}
+            {data?.length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-500">No data</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
