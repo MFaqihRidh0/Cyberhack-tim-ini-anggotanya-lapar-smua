@@ -5,12 +5,7 @@ import pg from 'pg';
 const globalForPrisma = globalThis;
 
 function getConnectionString() {
-  // Try env vars first (Amplify runtime), fallback to hardcoded for buildpad Supabase
-  return (
-    process.env.DATABASE_URL ||
-    process.env.DIRECT_URL ||
-    'postgresql://postgres.f19f407b-b0a2-49e5-8a54-95a8b031189f:kyECrb1hvps7-2diT8x6sinL2bFB84Ty@db2.buildpad.ai:5432/postgres'
-  );
+  return process.env.DATABASE_URL || process.env.DIRECT_URL || '';
 }
 
 function createPrismaClient() {
