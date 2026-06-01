@@ -29,6 +29,7 @@ backend/.env
 
 # MCP configuration (contains tokens)
 .kiro/settings/mcp.json
+.mcp.json
 
 # Zip file
 *.zip
