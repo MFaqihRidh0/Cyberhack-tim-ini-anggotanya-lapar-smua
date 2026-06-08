@@ -1,0 +1,26 @@
+import supabase from '@/lib/server/db';
+import { verifyAuth, unauthorized, forbidden, checkRole } from '@/lib/server/auth';
+
+export async function GET(request) {
+  const user = await verifyAuth(request);
+  if (!user) return unauthorized();
+
+  const { data } = await supabase.from('products').select('*').eq('is_active', true).order('name');
+  return Response.json({ success: true, data: data || [], message: 'Berhasil' });
+}
+
+export async function POST(request) {
+  const user = await verifyAuth(request);
+  if (!user) return unauthorized();
+  if (!checkRole(user, 'MANAGER')) return forbidden();
+
+  const body = await request.json();
+  const { name, code, category, unit, shelf_life_days } = body;
+  if (!name || !code || !category || !unit) {
+    return Response.json({ success: false, data: null, message: 'name, code, category, unit wajib diisi' }, { status: 400 });
+  }
+
+  const { data, error } = await supabase.from('products').insert({ name, code, category, unit, shelf_life_days, is_active: true }).select().single();
+  if (error) return Response.json({ success: false, data: null, message: error.message }, { status: 400 });
+  return Response.json({ success: true, data, message: 'Product berhasil dibuat' }, { status: 201 });
+}
